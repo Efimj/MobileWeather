@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MobileWeatherApp</string>
+    <string name="permissions_required">Permissions required</string>
+    <string name="permissions_are_required_for_the_program_to_work">Permissions are required for the program to work</string>
+    <string name="location_not_found">Location not found</string>
+    <string name="you_need_to_enable_geolocation">You need to enable geolocation</string>
+    <string name="turn_on_the_internet">Turn on the internet</string>
+    <string name="internet_is_required_for_the_program_to_work">Internet is required for the program to work</string>
+    <string name="update">Update</string>
+    <string name="forecast_missing">Forecast missing</string>
+    <string name="weather_forecast_is_missing_try_refreshing">Weather forecast is missing, try refreshing</string>
+    <string name="today">Today</string>
+    <string name="loading">Loading</string>
+    <string name="it_has_to_happen_quickly">It has to happen quickly :)</string>
+    <string name="now">Now</string>
+    <string name="grant_permission">Grant permission</string>
+</resources>
