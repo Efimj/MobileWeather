@@ -85,6 +85,6 @@ dependencies {
     // Icons
     implementation(libs.androidx.material.icons.extended)
 
-    // Pull refresh and other components..
-    implementation(libs.material3)
+    // To handle GPS
+    implementation(libs.play.services.location)
 }

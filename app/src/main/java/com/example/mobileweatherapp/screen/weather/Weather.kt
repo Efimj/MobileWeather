@@ -3,10 +3,9 @@ package com.example.mobileweatherapp.screen.weather
 import android.app.Activity
 import android.content.Context
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Bundle
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,10 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobileweatherapp.R
 import com.example.mobileweatherapp.ui.components.Stub
@@ -47,6 +46,7 @@ import com.example.mobileweatherapp.ui.components.TimeWeatherCard
 import com.example.mobileweatherapp.ui.components.VerticalSpacer
 import com.example.mobileweatherapp.ui.components.WeatherDayCard
 import com.example.mobileweatherapp.util.ContextUtil
+import com.google.android.gms.location.LocationServices
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -138,27 +138,19 @@ private fun OnPermissionUpdated(
 
     LaunchedEffect(lifecycleState) {
         if (ContextUtil.checkLocationPermission(context)) {
-            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val locationManager =
+                context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-            // To handle location update
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                600000,
-                1000f,
-                object : LocationListener {
-                    override fun onLocationChanged(location: Location) {
+            val fusedLocationClient =
+                LocationServices.getFusedLocationProviderClient(context as Activity)
+
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location: Location? ->
+                    if (location != null) {
                         viewModel.updateLocation(location)
                         viewModel.updateWeather(context)
                     }
-
-                    @Deprecated("Deprecated in Java")
-                    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-                    }
-
-                    override fun onProviderEnabled(provider: String) {}
-                    override fun onProviderDisabled(provider: String) {}
                 }
-            )
         } else {
             viewModel.updateWeatherResponseState(WeatherResponseState.PermissionsNotGranted)
         }
@@ -207,6 +199,7 @@ fun FooterAction(text: String, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WeatherScreenContent(
     state: WeatherScreenState,
