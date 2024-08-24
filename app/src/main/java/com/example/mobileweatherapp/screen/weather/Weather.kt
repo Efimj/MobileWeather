@@ -138,9 +138,6 @@ private fun OnPermissionUpdated(
 
     LaunchedEffect(lifecycleState) {
         if (ContextUtil.checkLocationPermission(context)) {
-            val locationManager =
-                context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
             val fusedLocationClient =
                 LocationServices.getFusedLocationProviderClient(context as Activity)
 
