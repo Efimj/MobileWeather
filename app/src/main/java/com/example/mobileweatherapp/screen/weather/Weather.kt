@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.CloudUpload
@@ -47,6 +50,7 @@ import com.example.mobileweatherapp.ui.components.WeatherDayCard
 import com.example.mobileweatherapp.util.ContextUtil
 import com.google.android.gms.location.LocationServices
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -207,6 +211,7 @@ fun WeatherScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(vertical = 20.dp)
     ) {
         Text(
@@ -218,8 +223,6 @@ fun WeatherScreenContent(
             color = MaterialTheme.colorScheme.onSecondaryContainer
         )
         VerticalSpacer(value = 10.dp)
-        ForecastDaysList(state, onSelectDay)
-        VerticalSpacer(value = 20.dp)
         AnimatedContent(state.selectedDay) {
             Text(
                 modifier = Modifier
@@ -234,15 +237,34 @@ fun WeatherScreenContent(
         }
         VerticalSpacer(value = 10.dp)
         DayWeather(state)
+        VerticalSpacer(value = 20.dp)
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            text = stringResource(R.string.weather_forecast),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface.copy(.8f)
+        )
+        VerticalSpacer(value = 10.dp)
+        ForecastDaysList(state, onSelectDay)
         FooterAction(stringResource(R.string.update), onClick = onUpdate)
     }
 }
 
 @Composable
-private fun ColumnScope.DayWeather(state: WeatherScreenState) {
-    LazyColumn(
-        modifier = Modifier.weight(1f),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+private fun DayWeather(state: WeatherScreenState) {
+    val scroll = rememberLazyListState()
+
+    LaunchedEffect(state.selectedDay) {
+        val hour = LocalTime.now().hour
+        scroll.animateScrollToItem(hour)
+    }
+
+    LazyRow(
+        state = scroll,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) {
         val currentWeather = state.weatherByDay.getValue(state.selectedDay)
@@ -258,12 +280,12 @@ private fun ForecastDaysList(
     state: WeatherScreenState,
     onSelectDay: (LocalDate) -> Unit
 ) {
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp)
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        items(items = state.weatherByDay.keys.toList(), key = { it.toString() }) { day ->
-            val weatherByDay = state.weatherByDay.getValue(day)
+        state.weatherByDay.keys.forEach {
+            val weatherByDay = state.weatherByDay.getValue(it)
 
             WeatherDayCard(
                 weather = weatherByDay,

@@ -3,7 +3,10 @@ package com.example.mobileweatherapp.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -21,6 +24,7 @@ import com.example.mobileweatherapp.R
 import com.example.openweatherapi.model.DailyWeatherData
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
 @Composable
 fun WeatherDayCard(
@@ -33,7 +37,8 @@ fun WeatherDayCard(
 
     val dateText =
         if (date == LocalDate.now()) stringResource(R.string.today) else date.format(formatter)
-    val tempText = "${weather.temperature.max()}°/${weather.temperature.min()}°"
+    val tempText =
+        "${weather.temperature.max().roundToInt()}°/${weather.temperature.min().roundToInt()}°"
 
     val borderColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
 
@@ -41,18 +46,19 @@ fun WeatherDayCard(
         border = BorderStroke(width = 2.dp, color = borderColor),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
-        Column(
+        Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .clickable { onClick(date) }
-                .padding(12.dp)
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = dateText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f)
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                modifier = Modifier.fillMaxWidth(),
                 text = tempText,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Normal,

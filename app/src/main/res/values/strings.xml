@@ -14,4 +14,5 @@
     <string name="it_has_to_happen_quickly">It has to happen quickly :)</string>
     <string name="now">Now</string>
     <string name="grant_permission">Grant permission</string>
+    <string name="weather_forecast">Weather forecast</string>
 </resources>
