@@ -1,9 +1,7 @@
 package com.example.mobileweatherapp.screen.weather
 
 import android.app.Activity
-import android.content.Context
 import android.location.Location
-import android.location.LocationManager
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
