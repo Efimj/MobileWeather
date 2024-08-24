@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun Stub(modifier: Modifier = Modifier, icon: ImageVector, title: String, description: String) {
     Box(
-        modifier = modifier.background(MaterialTheme.colorScheme.surface),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         Column(

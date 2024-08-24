@@ -4,6 +4,7 @@ import android.app.Activity
 import android.location.Location
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,7 +61,9 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
 
     OnPermissionUpdated(viewModel)
 
-    AnimatedContent(targetState = weatherState.weatherResponseState) { state ->
+    AnimatedContent(
+        targetState = weatherState.weatherResponseState
+    ) { state ->
         when (state) {
             WeatherResponseState.Loading -> {
                 Stub(
