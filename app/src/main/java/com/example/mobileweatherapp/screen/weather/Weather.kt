@@ -4,17 +4,14 @@ import android.app.Activity
 import android.location.Location
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -27,8 +24,10 @@ import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.LocationOff
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -56,6 +55,7 @@ import java.time.format.DateTimeFormatter
 /**
  * Provide weather screen.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
     val context = LocalContext.current
@@ -65,66 +65,71 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
 
     OnPermissionUpdated(viewModel)
 
-    AnimatedContent(
-        targetState = weatherState.weatherResponseState
-    ) { state ->
-        when (state) {
-            WeatherResponseState.Loading -> {
-                Stub(
-                    modifier = Modifier.fillMaxSize(),
-                    icon = Icons.Rounded.CloudUpload,
-                    title = stringResource(R.string.loading),
-                    description = stringResource(R.string.it_has_to_happen_quickly),
-                )
-            }
-
-            WeatherResponseState.PermissionsNotGranted -> {
-                ErrorStub(
-                    icon = Icons.Rounded.Flag,
-                    title = stringResource(R.string.permissions_required),
-                    description = stringResource(R.string.permissions_are_required_for_the_program_to_work),
-                    buttonText = stringResource(R.string.grant_permission),
-                    onButtonClick = { ContextUtil.requestLocationPermission(context as Activity); updateAction() }
-                )
-            }
-
-            WeatherResponseState.LocationNotFound -> {
-                ErrorStub(
-                    icon = Icons.Rounded.LocationOff,
-                    title = stringResource(R.string.location_not_found),
-                    description = stringResource(R.string.you_need_to_enable_geolocation),
-                    buttonText = stringResource(R.string.update),
-                    onButtonClick = updateAction
-                )
-            }
-
-            WeatherResponseState.NetworkError -> {
-                ErrorStub(
-                    icon = Icons.Rounded.WifiOff,
-                    title = stringResource(R.string.turn_on_the_internet),
-                    description = stringResource(R.string.internet_is_required_for_the_program_to_work),
-                    buttonText = stringResource(R.string.update),
-                    onButtonClick = updateAction
-                )
-            }
-
-            WeatherResponseState.ForecastMissing -> {
-                ErrorStub(
-                    icon = Icons.Rounded.CalendarToday,
-                    title = stringResource(R.string.forecast_missing),
-                    description = stringResource(R.string.weather_forecast_is_missing_try_refreshing),
-                    buttonText = stringResource(R.string.update),
-                    onButtonClick = updateAction,
-                )
-            }
-
-            else -> {
-                weatherState.weather?.let {
-                    WeatherScreenContent(
-                        state = weatherState,
-                        onUpdate = updateAction,
-                        onSelectDay = viewModel::selectDay
+    PullToRefreshBox(
+        isRefreshing = weatherState.weatherResponseState == WeatherResponseState.Loading,
+        onRefresh = { updateAction() })
+    {
+        AnimatedContent(
+            targetState = weatherState.weatherResponseState
+        ) { state ->
+            when (state) {
+                WeatherResponseState.Loading -> {
+                    Stub(
+                        modifier = Modifier.fillMaxSize(),
+                        icon = Icons.Rounded.CloudUpload,
+                        title = stringResource(R.string.loading),
+                        description = stringResource(R.string.it_has_to_happen_quickly),
                     )
+                }
+
+                WeatherResponseState.PermissionsNotGranted -> {
+                    ErrorStub(
+                        icon = Icons.Rounded.Flag,
+                        title = stringResource(R.string.permissions_required),
+                        description = stringResource(R.string.permissions_are_required_for_the_program_to_work),
+                        buttonText = stringResource(R.string.grant_permission),
+                        onButtonClick = { ContextUtil.requestLocationPermission(context as Activity); updateAction() }
+                    )
+                }
+
+                WeatherResponseState.LocationNotFound -> {
+                    ErrorStub(
+                        icon = Icons.Rounded.LocationOff,
+                        title = stringResource(R.string.location_not_found),
+                        description = stringResource(R.string.you_need_to_enable_geolocation),
+                        buttonText = stringResource(R.string.update),
+                        onButtonClick = updateAction
+                    )
+                }
+
+                WeatherResponseState.NetworkError -> {
+                    ErrorStub(
+                        icon = Icons.Rounded.WifiOff,
+                        title = stringResource(R.string.turn_on_the_internet),
+                        description = stringResource(R.string.internet_is_required_for_the_program_to_work),
+                        buttonText = stringResource(R.string.update),
+                        onButtonClick = updateAction
+                    )
+                }
+
+                WeatherResponseState.ForecastMissing -> {
+                    ErrorStub(
+                        icon = Icons.Rounded.CalendarToday,
+                        title = stringResource(R.string.forecast_missing),
+                        description = stringResource(R.string.weather_forecast_is_missing_try_refreshing),
+                        buttonText = stringResource(R.string.update),
+                        onButtonClick = updateAction,
+                    )
+                }
+
+                else -> {
+                    weatherState.weather?.let {
+                        WeatherScreenContent(
+                            state = weatherState,
+                            onUpdate = updateAction,
+                            onSelectDay = viewModel::selectDay
+                        )
+                    }
                 }
             }
         }
@@ -201,7 +206,7 @@ fun FooterAction(text: String, onClick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreenContent(
     state: WeatherScreenState,

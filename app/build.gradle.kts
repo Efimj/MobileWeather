@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "2.0.0"
 }
 
 val javaVersion = JavaVersion.toVersion(libs.versions.jvmTarget.get())
@@ -87,4 +88,10 @@ dependencies {
 
     // To handle GPS
     implementation(libs.play.services.location)
+
+    // For serialization settings
+    implementation(libs.kotlinx.serialization.json)
+
+    // Pull to refresh
+    implementation(libs.material3)
 }
