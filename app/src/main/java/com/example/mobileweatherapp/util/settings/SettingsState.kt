@@ -11,7 +11,7 @@ enum class NightMode {
 }
 
 @Serializable
-data class UserLocation(val longitude: Double, val latitude: Double)
+data class UserLocation(val address: String, val longitude: Double, val latitude: Double)
 
 @Keep
 @Serializable
@@ -19,5 +19,5 @@ data class SettingsState(
     val checkUpdates: Boolean = true,
     val secureMode: Boolean = false,
     val nightMode: NightMode = NightMode.System,
-    val location: UserLocation? = null
+    val location: UserLocation? = null,
 )

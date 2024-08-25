@@ -47,6 +47,7 @@ import com.example.mobileweatherapp.ui.components.TimeWeatherCard
 import com.example.mobileweatherapp.ui.components.VerticalSpacer
 import com.example.mobileweatherapp.ui.components.WeatherDayCard
 import com.example.mobileweatherapp.util.ContextUtil
+import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.google.android.gms.location.LocationServices
 import java.time.LocalDate
 import java.time.LocalTime
@@ -174,14 +175,16 @@ fun WeatherScreenContent(
                         .verticalScroll(rememberScrollState())
                         .padding(vertical = 20.dp)
                 ) {
-                    Text(
-                        modifier = Modifier
-                            .basicMarquee()
-                            .padding(horizontal = 20.dp),
-                        text = state.address,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    settings.location?.let {
+                        Text(
+                            modifier = Modifier
+                                .basicMarquee()
+                                .padding(horizontal = 20.dp),
+                            text = it.address,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
                     VerticalSpacer(value = 10.dp)
                     AnimatedContent(state.selectedDay) {
                         Text(

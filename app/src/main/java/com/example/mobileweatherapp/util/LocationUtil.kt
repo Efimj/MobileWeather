@@ -4,6 +4,7 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import com.example.mobileweatherapp.R
 import java.util.Locale
 
 /**
@@ -18,7 +19,7 @@ object LocationUtil {
      * @param location the object containing latitude and longitude data.
      * @return a formatted string containing the country, city, and district of the location, or `null`.
      */
-    fun getAddressFromLocation(context: Context, location: Location): String? {
+    fun getAddressFromLocation(context: Context, location: Location): String {
         val geocoder = Geocoder(context, Locale.getDefault())
         val addresses: List<Address>?
         var result: String? = null
@@ -36,6 +37,6 @@ object LocationUtil {
             e.printStackTrace()
         }
 
-        return result
+        return result ?: context.getString(R.string.address_unknown)
     }
 }

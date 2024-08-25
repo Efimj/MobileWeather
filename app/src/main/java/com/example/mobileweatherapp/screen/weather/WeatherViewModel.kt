@@ -11,6 +11,9 @@ import com.example.openweatherapi.model.WeatherData
 import com.example.openweatherapi.util.WeatherUtil
 import com.example.mobileweatherapp.util.ContextUtil
 import com.example.mobileweatherapp.util.LocationUtil.getAddressFromLocation
+import com.example.mobileweatherapp.util.settings.SettingsManager
+import com.example.mobileweatherapp.util.settings.SettingsManager.settings
+import com.example.mobileweatherapp.util.settings.UserLocation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -34,7 +37,6 @@ enum class WeatherResponseState {
  * @property weatherByDay A map of daily weather data grouped by date.
  * @property weatherResponseState The current state of the weather response.
  * @property selectedDay The currently selected day for which weather data is displayed.
- * @property address The address associated with the current location.
  * @property location The current location of the user.
  */
 data class WeatherScreenState(
@@ -42,7 +44,6 @@ data class WeatherScreenState(
     val weatherByDay: Map<LocalDate, DailyWeatherData> = emptyMap(),
     val weatherResponseState: WeatherResponseState = WeatherResponseState.Done,
     val selectedDay: LocalDate = LocalDate.now(),
-    val address: String = "",
     val location: Location? = null,
     val isLoading: Boolean = true,
 )
@@ -62,36 +63,53 @@ class WeatherViewModel : ViewModel() {
             return
         }
 
-        if (!ContextUtil.checkLocationPermission(context)) {
-            updateWeatherResponseState(WeatherResponseState.PermissionsNotGranted)
-            return
+        if (settings.location == null) {
+            if (!ContextUtil.checkLocationPermission(context)) {
+                updateWeatherResponseState(WeatherResponseState.PermissionsNotGranted)
+                return
+            }
+
+            val location = _weatherScreenState.value.location
+
+            if (location == null) {
+                updateWeatherResponseState(WeatherResponseState.LocationNotFound)
+                return
+            }
+
+            val address = getAddressFromLocation(context = context, location = location)
+
+            SettingsManager.update(
+                context = context,
+                settings = settings.copy(
+                    location = UserLocation(
+                        address = address,
+                        latitude = location.latitude,
+                        longitude = location.longitude
+                    )
+                )
+            )
         }
-
-        val location = _weatherScreenState.value.location
-
-        if (location == null) {
-            updateWeatherResponseState(WeatherResponseState.LocationNotFound)
-            return
-        }
-
-        val address = getAddressFromLocation(context = context, location = location)
-        updateLocationName(address = address)
 
         viewModelScope.launch {
-            try {
-                val response = OpenWeatherInstance.getService().getForecast(
-                    lat = location.latitude,
-                    lon = location.longitude,
-                )
-                val weatherByDay = WeatherUtil.groupWeatherByDay(response)
+            settings.location?.let {
+                try {
+                    val response = OpenWeatherInstance.getService().getForecast(
+                        lat = it.latitude,
+                        lon = it.longitude,
+                    )
+                    val weatherByDay = WeatherUtil.groupWeatherByDay(response)
 
-                _weatherScreenState.value =
-                    _weatherScreenState.value.copy(weather = response, weatherByDay = weatherByDay)
+                    _weatherScreenState.value =
+                        _weatherScreenState.value.copy(
+                            weather = response,
+                            weatherByDay = weatherByDay
+                        )
 
-                updateWeatherResponseState(state = WeatherResponseState.Done)
-            } catch (e: Exception) {
-                Log.e("weather api", "OpenWeatherInstance fetch", e)
-                updateWeatherResponseState(state = WeatherResponseState.ForecastMissing)
+                    updateWeatherResponseState(state = WeatherResponseState.Done)
+                } catch (e: Exception) {
+                    Log.e("weather api", "OpenWeatherInstance fetch", e)
+                    updateWeatherResponseState(state = WeatherResponseState.ForecastMissing)
+                }
             }
             _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = false)
         }
@@ -107,13 +125,5 @@ class WeatherViewModel : ViewModel() {
 
     fun updateLocation(location: Location) {
         _weatherScreenState.value = _weatherScreenState.value.copy(location = location)
-    }
-
-    fun updateLocationName(address: String?) {
-        if (address.isNullOrBlank()) {
-            _weatherScreenState.value = _weatherScreenState.value.copy(address = "Not found")
-            return
-        }
-        _weatherScreenState.value = _weatherScreenState.value.copy(address = address)
     }
 }
