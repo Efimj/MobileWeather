@@ -21,7 +21,6 @@ import java.time.LocalDate
  */
 enum class WeatherResponseState {
     Done,
-    Loading,
     PermissionsNotGranted,
     LocationNotFound,
     NetworkError,
@@ -41,10 +40,11 @@ enum class WeatherResponseState {
 data class WeatherScreenState(
     val weather: WeatherData? = null,
     val weatherByDay: Map<LocalDate, DailyWeatherData> = emptyMap(),
-    val weatherResponseState: WeatherResponseState = WeatherResponseState.Loading,
+    val weatherResponseState: WeatherResponseState = WeatherResponseState.Done,
     val selectedDay: LocalDate = LocalDate.now(),
     val address: String = "",
     val location: Location? = null,
+    val isLoading: Boolean = true,
 )
 
 /**
@@ -55,7 +55,7 @@ class WeatherViewModel : ViewModel() {
     val weatherScreenState: StateFlow<WeatherScreenState> = _weatherScreenState
 
     fun updateWeather(context: Context) {
-        updateWeatherResponseState(WeatherResponseState.Loading)
+        _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = true)
 
         if (!ContextUtil.hasInternetConnection(context)) {
             updateWeatherResponseState(WeatherResponseState.NetworkError)
@@ -93,6 +93,7 @@ class WeatherViewModel : ViewModel() {
                 Log.e("weather api", "OpenWeatherInstance fetch", e)
                 updateWeatherResponseState(state = WeatherResponseState.ForecastMissing)
             }
+            _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = false)
         }
     }
 

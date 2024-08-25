@@ -55,7 +55,6 @@ import java.time.format.DateTimeFormatter
 /**
  * Provide weather screen.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
     val context = LocalContext.current
@@ -64,72 +63,57 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
     val updateAction: () -> Unit = { viewModel.updateWeather(context = context) }
 
     OnPermissionUpdated(viewModel)
+    AnimatedContent(
+        targetState = weatherState.weatherResponseState
+    ) { state ->
+        when (state) {
+            WeatherResponseState.PermissionsNotGranted -> {
+                ErrorStub(
+                    icon = Icons.Rounded.Flag,
+                    title = stringResource(R.string.permissions_required),
+                    description = stringResource(R.string.permissions_are_required_for_the_program_to_work),
+                    buttonText = stringResource(R.string.grant_permission),
+                    onButtonClick = { ContextUtil.requestLocationPermission(context as Activity); updateAction() }
+                )
+            }
 
-    PullToRefreshBox(
-        isRefreshing = weatherState.weatherResponseState == WeatherResponseState.Loading,
-        onRefresh = { updateAction() })
-    {
-        AnimatedContent(
-            targetState = weatherState.weatherResponseState
-        ) { state ->
-            when (state) {
-                WeatherResponseState.Loading -> {
-                    Stub(
-                        modifier = Modifier.fillMaxSize(),
-                        icon = Icons.Rounded.CloudUpload,
-                        title = stringResource(R.string.loading),
-                        description = stringResource(R.string.it_has_to_happen_quickly),
+            WeatherResponseState.LocationNotFound -> {
+                ErrorStub(
+                    icon = Icons.Rounded.LocationOff,
+                    title = stringResource(R.string.location_not_found),
+                    description = stringResource(R.string.you_need_to_enable_geolocation),
+                    buttonText = stringResource(R.string.update),
+                    onButtonClick = updateAction
+                )
+            }
+
+            WeatherResponseState.NetworkError -> {
+                ErrorStub(
+                    icon = Icons.Rounded.WifiOff,
+                    title = stringResource(R.string.turn_on_the_internet),
+                    description = stringResource(R.string.internet_is_required_for_the_program_to_work),
+                    buttonText = stringResource(R.string.update),
+                    onButtonClick = updateAction
+                )
+            }
+
+            WeatherResponseState.ForecastMissing -> {
+                ErrorStub(
+                    icon = Icons.Rounded.CalendarToday,
+                    title = stringResource(R.string.forecast_missing),
+                    description = stringResource(R.string.weather_forecast_is_missing_try_refreshing),
+                    buttonText = stringResource(R.string.update),
+                    onButtonClick = updateAction,
+                )
+            }
+
+            else -> {
+                weatherState.weather?.let {
+                    WeatherScreenContent(
+                        state = weatherState,
+                        onUpdate = updateAction,
+                        onSelectDay = viewModel::selectDay
                     )
-                }
-
-                WeatherResponseState.PermissionsNotGranted -> {
-                    ErrorStub(
-                        icon = Icons.Rounded.Flag,
-                        title = stringResource(R.string.permissions_required),
-                        description = stringResource(R.string.permissions_are_required_for_the_program_to_work),
-                        buttonText = stringResource(R.string.grant_permission),
-                        onButtonClick = { ContextUtil.requestLocationPermission(context as Activity); updateAction() }
-                    )
-                }
-
-                WeatherResponseState.LocationNotFound -> {
-                    ErrorStub(
-                        icon = Icons.Rounded.LocationOff,
-                        title = stringResource(R.string.location_not_found),
-                        description = stringResource(R.string.you_need_to_enable_geolocation),
-                        buttonText = stringResource(R.string.update),
-                        onButtonClick = updateAction
-                    )
-                }
-
-                WeatherResponseState.NetworkError -> {
-                    ErrorStub(
-                        icon = Icons.Rounded.WifiOff,
-                        title = stringResource(R.string.turn_on_the_internet),
-                        description = stringResource(R.string.internet_is_required_for_the_program_to_work),
-                        buttonText = stringResource(R.string.update),
-                        onButtonClick = updateAction
-                    )
-                }
-
-                WeatherResponseState.ForecastMissing -> {
-                    ErrorStub(
-                        icon = Icons.Rounded.CalendarToday,
-                        title = stringResource(R.string.forecast_missing),
-                        description = stringResource(R.string.weather_forecast_is_missing_try_refreshing),
-                        buttonText = stringResource(R.string.update),
-                        onButtonClick = updateAction,
-                    )
-                }
-
-                else -> {
-                    weatherState.weather?.let {
-                        WeatherScreenContent(
-                            state = weatherState,
-                            onUpdate = updateAction,
-                            onSelectDay = viewModel::selectDay
-                        )
-                    }
                 }
             }
         }
@@ -160,6 +144,73 @@ private fun OnPermissionUpdated(
                 }
         } else {
             viewModel.updateWeatherResponseState(WeatherResponseState.PermissionsNotGranted)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WeatherScreenContent(
+    state: WeatherScreenState,
+    onUpdate: () -> Unit,
+    onSelectDay: (LocalDate) -> Unit
+) {
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = onUpdate
+    ) {
+        AnimatedContent(targetState = state.isLoading) { loading ->
+            if (loading) {
+                Stub(
+                    modifier = Modifier.fillMaxSize(),
+                    icon = Icons.Rounded.CloudUpload,
+                    title = stringResource(R.string.loading),
+                    description = stringResource(R.string.it_has_to_happen_quickly),
+                )
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 20.dp)
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .basicMarquee()
+                            .padding(horizontal = 20.dp),
+                        text = state.address,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    VerticalSpacer(value = 10.dp)
+                    AnimatedContent(state.selectedDay) {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .basicMarquee()
+                                .padding(horizontal = 20.dp),
+                            text = it.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurface.copy(.8f)
+                        )
+                    }
+                    VerticalSpacer(value = 10.dp)
+                    DayWeather(state)
+                    VerticalSpacer(value = 20.dp)
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        text = stringResource(R.string.weather_forecast),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface.copy(.8f)
+                    )
+                    VerticalSpacer(value = 10.dp)
+                    ForecastDaysList(state, onSelectDay)
+                }
+            }
         }
     }
 }
@@ -203,58 +254,6 @@ fun FooterAction(text: String, onClick: () -> Unit) {
         Button(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
             Text(text = text)
         }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
-@Composable
-fun WeatherScreenContent(
-    state: WeatherScreenState,
-    onUpdate: () -> Unit,
-    onSelectDay: (LocalDate) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = 20.dp)
-    ) {
-        Text(
-            modifier = Modifier
-                .basicMarquee()
-                .padding(horizontal = 20.dp),
-            text = state.address,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
-        )
-        VerticalSpacer(value = 10.dp)
-        AnimatedContent(state.selectedDay) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .basicMarquee()
-                    .padding(horizontal = 20.dp),
-                text = it.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurface.copy(.8f)
-            )
-        }
-        VerticalSpacer(value = 10.dp)
-        DayWeather(state)
-        VerticalSpacer(value = 20.dp)
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            text = stringResource(R.string.weather_forecast),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onSurface.copy(.8f)
-        )
-        VerticalSpacer(value = 10.dp)
-        ForecastDaysList(state, onSelectDay)
-        FooterAction(stringResource(R.string.update), onClick = onUpdate)
     }
 }
 
