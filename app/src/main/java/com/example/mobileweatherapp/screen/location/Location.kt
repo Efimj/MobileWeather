@@ -256,13 +256,8 @@ private fun GetCoordinates(
         val latitude = latitude.toDoubleOrNull()
         val longitude = longitude.toDoubleOrNull()
 
-        if (latitude == null) {
-            latitudeWrong = true
-        }
-
-        if (longitude == null) {
-            longitudeWrong = true
-        }
+        latitudeWrong = latitude == null
+        longitudeWrong = longitude == null
 
         if (latitude == null || longitude == null) {
             onReset()
