@@ -48,33 +48,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.mobileweatherapp.R
+import com.example.mobileweatherapp.navigation.NavigationHelper.navigateToMain
+import com.example.mobileweatherapp.navigation.Screen
 import com.example.mobileweatherapp.ui.components.HorizontalSpacer
 import com.example.mobileweatherapp.ui.components.VerticalSpacer
+import com.example.mobileweatherapp.ui.helper.LocaleProvider
 import com.example.mobileweatherapp.util.ContextUtil
 import com.example.mobileweatherapp.util.LocationUtil
+import com.example.mobileweatherapp.util.settings.SettingsManager
+import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.mobileweatherapp.util.settings.UserLocation
 import com.google.android.gms.location.LocationServices
 
 @Composable
-fun LocationScreen(viewModel: LocationViewModel = viewModel()) {
+fun LocationScreen(navController: NavHostController, viewModel: LocationViewModel = viewModel()) {
+    val insets = LocaleProvider.LocalInsetsPaddings.current
     val locationState by viewModel.locationScreenState.collectAsState()
-    val pager = rememberPagerState { LocationByType.entries.size }
-
-    LaunchedEffect(locationState.type) {
-        val target = when (locationState.type) {
-            LocationByType.Geolocation -> 0
-            LocationByType.Coordinates -> 1
-
-        }
-
-        pager.animateScrollToPage(target)
-    }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(insets)
             .padding(vertical = 40.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -125,29 +123,30 @@ fun LocationScreen(viewModel: LocationViewModel = viewModel()) {
             }
         }
         VerticalSpacer(value = 20.dp)
-        HorizontalPager(modifier = Modifier.animateContentSize(), state = pager) { page ->
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                when (page) {
-                    0 -> GetGeolocation(
-                        state = locationState,
-                        onUpdate = viewModel::updateLocation
-                    )
+        AnimatedContent(targetState = locationState.type) {
+            when (it) {
+                LocationByType.Geolocation -> GetGeolocation(
+                    state = locationState,
+                    onUpdate = viewModel::updateLocation
+                )
 
-                    1 -> GetCoordinates(
-                        state = locationState,
-                        onUpdate = viewModel::updateLocation,
-                        onReset = viewModel::resetLocation,
-                    )
-                }
+                LocationByType.Coordinates -> GetCoordinates(
+                    state = locationState,
+                    onUpdate = viewModel::updateLocation,
+                    onReset = viewModel::resetLocation,
+                )
             }
         }
         VerticalSpacer(value = 20.dp)
         AnimatedVisibility(visible = locationState.location != null) {
             ExtendedFloatingActionButton(
-                onClick = { },
+                onClick = {
+                    SettingsManager.update(
+                        context = context,
+                        settings = settings.copy(location = locationState.location)
+                    )
+                    navController.navigateToMain(Screen.Weather)
+                },
                 icon = {
                     Icon(
                         imageVector = Icons.Rounded.AddLocation,

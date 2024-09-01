@@ -6,30 +6,29 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import com.example.mobileweatherapp.screen.location.LocationScreen
-import com.example.mobileweatherapp.screen.weather.WeatherScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.mobileweatherapp.navigation.AppNavHost
+import com.example.mobileweatherapp.navigation.Screen
+import com.example.mobileweatherapp.ui.helper.LocaleProvider
 import com.example.mobileweatherapp.ui.theme.MobileWeatherAppTheme
 import com.example.mobileweatherapp.util.settings.NightMode
 import com.example.mobileweatherapp.util.settings.SettingsManager
 import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 
 class MainActivity : ComponentActivity() {
-
     override fun attachBaseContext(newBase: Context) {
         SettingsManager.init(newBase)
         super.attachBaseContext(newBase)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        actionBar?.hide()
         enableEdgeToEdge()
+        actionBar?.hide()
+        super.onCreate(savedInstanceState)
 
         setContent {
             MobileWeatherAppTheme(
@@ -40,13 +39,22 @@ class MainActivity : ComponentActivity() {
                 },
             ) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
-
-                        LocationScreen()
-//                        WeatherScreen()
+                    CompositionLocalProvider(LocaleProvider.LocalInsetsPaddings provides innerPadding) {
+                        AppNavHost(
+                            navController = rememberNavController(),
+                            startDestination = getStartDestination()
+                        )
                     }
                 }
             }
+        }
+    }
+
+    fun getStartDestination(): Screen {
+        return if (settings.location == null) {
+            Screen.Location
+        } else {
+            Screen.Weather
         }
     }
 }

@@ -68,6 +68,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // Navigation
+    implementation(libs.navigation.compose)
+    implementation(libs.androidx.navigation.runtime.ktx)
+
     // Custom weather api
     implementation(projects.feature.openweatherapi)
 

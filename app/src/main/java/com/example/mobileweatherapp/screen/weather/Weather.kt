@@ -1,7 +1,5 @@
 package com.example.mobileweatherapp.screen.weather
 
-import android.app.Activity
-import android.location.Location
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
@@ -34,16 +32,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.mobileweatherapp.R
 import com.example.mobileweatherapp.ui.components.Stub
 import com.example.mobileweatherapp.ui.components.TimeWeatherCard
 import com.example.mobileweatherapp.ui.components.VerticalSpacer
 import com.example.mobileweatherapp.ui.components.WeatherDayCard
-import com.example.mobileweatherapp.util.ContextUtil
+import com.example.mobileweatherapp.ui.helper.LocaleProvider
 import com.example.mobileweatherapp.util.settings.SettingsManager.settings
-import com.google.android.gms.location.LocationServices
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -52,14 +49,13 @@ import java.time.format.DateTimeFormatter
  * Provide weather screen.
  */
 @Composable
-fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
+fun WeatherScreen(navController: NavHostController, viewModel: WeatherViewModel = viewModel()) {
     val context = LocalContext.current
     val weatherState by viewModel.weatherScreenState.collectAsState()
 
     val updateAction: () -> Unit = { viewModel.updateWeather(context = context) }
 
     OnLaunch(viewModel)
-    OnPermissionUpdated(viewModel)
     WeatherScreenContent(
         state = weatherState,
         onUpdate = updateAction,
@@ -78,36 +74,6 @@ private fun OnLaunch(
     }
 }
 
-/**
- * For permission observing.
- */
-@Composable
-private fun OnPermissionUpdated(
-    viewModel: WeatherViewModel,
-) {
-    val context = LocalContext.current
-    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
-
-    LaunchedEffect(lifecycleState) {
-        if (ContextUtil.checkLocationPermission(context)) {
-            val fusedLocationClient =
-                LocationServices.getFusedLocationProviderClient(context as Activity)
-
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location: Location? ->
-                    if (location != null) {
-                        viewModel.updateLocation(location)
-                        viewModel.updateWeather(context)
-                    }
-                }
-        } else {
-            if (viewModel.weatherScreenState.value.location == null) {
-                ContextUtil.requestLocationPermission(activity = context as Activity)
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreenContent(
@@ -115,6 +81,8 @@ fun WeatherScreenContent(
     onUpdate: () -> Unit,
     onSelectDay: (LocalDate) -> Unit
 ) {
+    val insets = LocaleProvider.LocalInsetsPaddings.current
+
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onUpdate
@@ -122,7 +90,7 @@ fun WeatherScreenContent(
         AnimatedContent(targetState = state.isLoading) { loading ->
             if (loading) {
                 Stub(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(insets),
                     icon = Icons.Rounded.CloudUpload,
                     title = stringResource(R.string.loading),
                     description = stringResource(R.string.it_has_to_happen_quickly),
@@ -132,6 +100,7 @@ fun WeatherScreenContent(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
+                        .padding(insets)
                         .padding(vertical = 20.dp)
                 ) {
                     settings.location?.let {
