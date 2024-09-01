@@ -16,4 +16,10 @@
     <string name="grant_permission">Grant permission</string>
     <string name="weather_forecast">Weather forecast</string>
     <string name="address_unknown">Address unknown</string>
+    <string name="add_location">Add location</string>
+    <string name="need_provide_location">To get the weather forecast, you need to provide your location</string>
+    <string name="geolocation">Geolocation</string>
+    <string name="coordinates">Coordinates</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
 </resources>

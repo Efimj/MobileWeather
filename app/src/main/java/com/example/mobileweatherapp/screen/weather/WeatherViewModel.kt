@@ -1,19 +1,21 @@
 package com.example.mobileweatherapp.screen.weather
 
+import android.app.Activity
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.openweatherapi.di.OpenWeatherInstance
-import com.example.openweatherapi.model.DailyWeatherData
-import com.example.openweatherapi.model.WeatherData
-import com.example.openweatherapi.util.WeatherUtil
 import com.example.mobileweatherapp.util.ContextUtil
 import com.example.mobileweatherapp.util.LocationUtil.getAddressFromLocation
 import com.example.mobileweatherapp.util.settings.SettingsManager
 import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.mobileweatherapp.util.settings.UserLocation
+import com.example.openweatherapi.di.OpenWeatherInstance
+import com.example.openweatherapi.model.DailyWeatherData
+import com.example.openweatherapi.model.WeatherData
+import com.example.openweatherapi.util.WeatherUtil
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,9 +26,6 @@ import java.time.LocalDate
  */
 enum class WeatherResponseState {
     Done,
-    PermissionsNotGranted,
-    LocationNotFound,
-    NetworkError,
     ForecastMissing
 }
 
@@ -45,7 +44,7 @@ data class WeatherScreenState(
     val weatherResponseState: WeatherResponseState = WeatherResponseState.Done,
     val selectedDay: LocalDate = LocalDate.now(),
     val location: Location? = null,
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
 )
 
 /**
@@ -58,37 +57,7 @@ class WeatherViewModel : ViewModel() {
     fun updateWeather(context: Context) {
         _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = true)
 
-        if (!ContextUtil.hasInternetConnection(context)) {
-            updateWeatherResponseState(WeatherResponseState.NetworkError)
-            return
-        }
-
-        if (settings.location == null) {
-            if (!ContextUtil.checkLocationPermission(context)) {
-                updateWeatherResponseState(WeatherResponseState.PermissionsNotGranted)
-                return
-            }
-
-            val location = _weatherScreenState.value.location
-
-            if (location == null) {
-                updateWeatherResponseState(WeatherResponseState.LocationNotFound)
-                return
-            }
-
-            val address = getAddressFromLocation(context = context, location = location)
-
-            SettingsManager.update(
-                context = context,
-                settings = settings.copy(
-                    location = UserLocation(
-                        address = address,
-                        latitude = location.latitude,
-                        longitude = location.longitude
-                    )
-                )
-            )
-        }
+        updateLocation(context)
 
         viewModelScope.launch {
             settings.location?.let {
@@ -112,6 +81,36 @@ class WeatherViewModel : ViewModel() {
                 }
             }
             _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = false)
+        }
+    }
+
+    private fun updateLocation(context: Context) {
+        var location = _weatherScreenState.value.location
+
+        if (ContextUtil.checkLocationPermission(context)) {
+            val fusedLocationClient =
+                LocationServices.getFusedLocationProviderClient(context as Activity)
+
+            fusedLocationClient.lastLocation.addOnSuccessListener { it: Location? ->
+                if (it != null) {
+                    location = it
+                }
+            }
+        }
+
+        location?.let {
+            val address = getAddressFromLocation(context = context, location = it)
+
+            SettingsManager.update(
+                context = context,
+                settings = settings.copy(
+                    location = UserLocation(
+                        address = address,
+                        latitude = it.latitude,
+                        longitude = it.longitude
+                    )
+                )
+            )
         }
     }
 

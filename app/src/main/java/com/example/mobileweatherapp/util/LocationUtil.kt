@@ -39,4 +39,25 @@ object LocationUtil {
 
         return result ?: context.getString(R.string.address_unknown)
     }
+
+    fun getAddressFromLocation(context: Context, latitude: Double, longitude: Double): String {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        val addresses: List<Address>?
+        var result: String? = null
+
+        try {
+            addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val address = addresses[0]
+                val country = address.countryName ?: ""
+                val city = address.locality ?: ""
+                val district = address.subLocality ?: address.subAdminArea ?: ""
+                result = "$country, $city, $district"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return result ?: context.getString(R.string.address_unknown)
+    }
 }

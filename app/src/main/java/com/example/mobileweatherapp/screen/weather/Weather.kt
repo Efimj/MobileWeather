@@ -3,7 +3,6 @@ package com.example.mobileweatherapp.screen.weather
 import android.app.Activity
 import android.location.Location
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,11 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.CloudUpload
-import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.LocationOff
-import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -36,10 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobileweatherapp.R
 import com.example.mobileweatherapp.ui.components.Stub
@@ -63,61 +58,23 @@ fun WeatherScreen(viewModel: WeatherViewModel = viewModel()) {
 
     val updateAction: () -> Unit = { viewModel.updateWeather(context = context) }
 
+    OnLaunch(viewModel)
     OnPermissionUpdated(viewModel)
-    AnimatedContent(
-        targetState = weatherState.weatherResponseState
-    ) { state ->
-        when (state) {
-            WeatherResponseState.PermissionsNotGranted -> {
-                ErrorStub(
-                    icon = Icons.Rounded.Flag,
-                    title = stringResource(R.string.permissions_required),
-                    description = stringResource(R.string.permissions_are_required_for_the_program_to_work),
-                    buttonText = stringResource(R.string.grant_permission),
-                    onButtonClick = { ContextUtil.requestLocationPermission(context as Activity); updateAction() }
-                )
-            }
+    WeatherScreenContent(
+        state = weatherState,
+        onUpdate = updateAction,
+        onSelectDay = viewModel::selectDay
+    )
+}
 
-            WeatherResponseState.LocationNotFound -> {
-                ErrorStub(
-                    icon = Icons.Rounded.LocationOff,
-                    title = stringResource(R.string.location_not_found),
-                    description = stringResource(R.string.you_need_to_enable_geolocation),
-                    buttonText = stringResource(R.string.update),
-                    onButtonClick = updateAction
-                )
-            }
+@Composable
+private fun OnLaunch(
+    viewModel: WeatherViewModel,
+) {
+    val context = LocalContext.current
 
-            WeatherResponseState.NetworkError -> {
-                ErrorStub(
-                    icon = Icons.Rounded.WifiOff,
-                    title = stringResource(R.string.turn_on_the_internet),
-                    description = stringResource(R.string.internet_is_required_for_the_program_to_work),
-                    buttonText = stringResource(R.string.update),
-                    onButtonClick = updateAction
-                )
-            }
-
-            WeatherResponseState.ForecastMissing -> {
-                ErrorStub(
-                    icon = Icons.Rounded.CalendarToday,
-                    title = stringResource(R.string.forecast_missing),
-                    description = stringResource(R.string.weather_forecast_is_missing_try_refreshing),
-                    buttonText = stringResource(R.string.update),
-                    onButtonClick = updateAction,
-                )
-            }
-
-            else -> {
-                weatherState.weather?.let {
-                    WeatherScreenContent(
-                        state = weatherState,
-                        onUpdate = updateAction,
-                        onSelectDay = viewModel::selectDay
-                    )
-                }
-            }
-        }
+    LaunchedEffect(Unit) {
+        viewModel.updateWeather(context = context)
     }
 }
 
@@ -144,7 +101,9 @@ private fun OnPermissionUpdated(
                     }
                 }
         } else {
-            viewModel.updateWeatherResponseState(WeatherResponseState.PermissionsNotGranted)
+            if (viewModel.weatherScreenState.value.location == null) {
+                ContextUtil.requestLocationPermission(activity = context as Activity)
+            }
         }
     }
 }
@@ -263,18 +222,20 @@ fun FooterAction(text: String, onClick: () -> Unit) {
 @Composable
 private fun DayWeather(state: WeatherScreenState) {
     val scroll = rememberLazyListState()
+    val currentWeather = state.weatherByDay.getOrDefault(state.selectedDay, null)
 
     LaunchedEffect(state.selectedDay) {
         val hour = LocalTime.now().hour
         scroll.animateScrollToItem(hour)
     }
 
+    if (currentWeather == null) return
+
     LazyRow(
         state = scroll,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) {
-        val currentWeather = state.weatherByDay.getValue(state.selectedDay)
         val timeRange = 0..23
         items(timeRange.toList()) {
             TimeWeatherCard(hour = it, currentWeather = currentWeather)
