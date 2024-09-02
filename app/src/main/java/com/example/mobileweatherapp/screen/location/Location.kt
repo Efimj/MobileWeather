@@ -4,7 +4,6 @@ import android.app.Activity
 import android.location.Location
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -141,11 +137,21 @@ fun LocationScreen(navController: NavHostController, viewModel: LocationViewMode
         AnimatedVisibility(visible = locationState.location != null) {
             ExtendedFloatingActionButton(
                 onClick = {
+                    val location = locationState.location ?: return@ExtendedFloatingActionButton
+
                     SettingsManager.update(
                         context = context,
-                        settings = settings.copy(location = locationState.location)
+                        settings = settings.copy(
+                            locations = settings.locations.plus(location),
+                            selectedLocation = location
+                        )
                     )
-                    navController.navigateToMain(Screen.Weather)
+
+                    if (navController.previousBackStackEntry == null) {
+                        navController.navigateToMain(Screen.Weather)
+                    } else {
+                        navController.popBackStack()
+                    }
                 },
                 icon = {
                     Icon(

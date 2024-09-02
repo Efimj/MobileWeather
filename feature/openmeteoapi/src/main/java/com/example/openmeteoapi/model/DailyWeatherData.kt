@@ -1,4 +1,4 @@
-package com.example.openweatherapi.model
+package com.example.openmeteoapi.model
 
 import java.time.LocalDate
 

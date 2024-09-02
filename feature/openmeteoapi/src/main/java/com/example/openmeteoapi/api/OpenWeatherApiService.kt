@@ -1,6 +1,6 @@
-package com.example.openweatherapi.api
+package com.example.openmeteoapi.api
 
-import com.example.openweatherapi.model.WeatherData
+import com.example.openmeteoapi.model.WeatherData
 import retrofit2.http.GET
 import retrofit2.http.Query
 

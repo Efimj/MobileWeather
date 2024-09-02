@@ -22,4 +22,5 @@
     <string name="coordinates">Coordinates</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
+    <string name="saved_locations">Saved locations</string>
 </resources>

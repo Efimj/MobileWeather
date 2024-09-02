@@ -1,7 +1,7 @@
-package com.example.openweatherapi.util
+package com.example.openmeteoapi.util
 
-import com.example.openweatherapi.model.DailyWeatherData
-import com.example.openweatherapi.model.WeatherData
+import com.example.openmeteoapi.model.DailyWeatherData
+import com.example.openmeteoapi.model.WeatherData
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 

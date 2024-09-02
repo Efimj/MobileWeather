@@ -19,5 +19,6 @@ data class SettingsState(
     val checkUpdates: Boolean = true,
     val secureMode: Boolean = false,
     val nightMode: NightMode = NightMode.System,
-    val location: UserLocation? = null,
+    val selectedLocation: UserLocation? = null,
+    val locations: Set<UserLocation> = emptySet(),
 )

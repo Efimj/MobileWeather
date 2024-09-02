@@ -4,9 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,7 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobileweatherapp.R
-import com.example.openweatherapi.model.DailyWeatherData
+import com.example.openmeteoapi.model.DailyWeatherData
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt

@@ -23,4 +23,4 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "MobileWeatherApp"
 include(":app")
-include(":feature:openweatherapi")
+include(":feature:openmeteoapi")

@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
     }
 
     fun getStartDestination(): Screen {
-        return if (settings.location == null) {
+        return if (settings.selectedLocation == null) {
             Screen.Location
         } else {
             Screen.Weather

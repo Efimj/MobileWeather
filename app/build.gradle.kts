@@ -73,7 +73,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
 
     // Custom weather api
-    implementation(projects.feature.openweatherapi)
+    implementation(projects.feature.openmeteoapi)
 
     // Splash screen
     implementation(libs.androidx.core.splashscreen)

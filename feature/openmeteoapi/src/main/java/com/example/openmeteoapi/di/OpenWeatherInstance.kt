@@ -1,6 +1,6 @@
-package com.example.openweatherapi.di
+package com.example.openmeteoapi.di
 
-import com.example.openweatherapi.api.OpenWeatherApiService
+import com.example.openmeteoapi.api.OpenWeatherApiService
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
