@@ -9,7 +9,7 @@ private const val DefaultForecastDays = 7
 /**
  *  Interface representing the API service for fetching weather forecast data.
  */
-interface OpenWeatherApiService {
+interface WeatherApiService {
     @GET("forecast?hourly=temperature_2m,relative_humidity_2m,weather_code&timezone=auto")
     suspend fun getForecast(
         @Query("latitude") lat: Double,

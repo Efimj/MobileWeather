@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.AddLocation
 import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -223,6 +224,7 @@ private fun Location(
                 )
                 VerticalSpacer(value = 10.dp)
                 LazyColumn(
+                    modifier = Modifier.weight(1f, false),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
@@ -264,6 +266,19 @@ private fun Location(
                             )
                         },
                         text = { Text(text = stringResource(R.string.add_location)) },
+                    )
+                    HorizontalSpacer(value = 10.dp)
+                    ExtendedFloatingActionButton(
+                        onClick = {
+
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Rounded.Edit,
+                                contentDescription = null
+                            )
+                        },
+                        text = { Text(text = stringResource(R.string.edit)) },
                     )
                 }
                 VerticalSpacer(value = 40.dp)

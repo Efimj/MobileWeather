@@ -2,19 +2,27 @@ package com.example.mobileweatherapp.screen.location
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mobileweatherapp.R
 import com.example.mobileweatherapp.util.settings.UserLocation
+import com.example.openmeteoapi.di.OpenMeteoInstance
+import com.example.openmeteoapi.model.LocationData
+import com.example.openmeteoapi.model.LocationResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 enum class LocationByType(@StringRes val title: Int) {
     Geolocation(R.string.geolocation),
+    Address(R.string.address),
     Coordinates(R.string.coordinates),
 }
 
 data class LocationScreenState(
     val type: LocationByType = LocationByType.Geolocation,
     val location: UserLocation? = null,
+    val addressString: String = "",
+    val addressLocationResponse: LocationResponse = LocationResponse(result = null)
 )
 
 class LocationViewModel : ViewModel() {
@@ -31,5 +39,18 @@ class LocationViewModel : ViewModel() {
 
     fun resetLocation() {
         _locationScreenState.value = locationScreenState.value.copy(location = null)
+    }
+
+    fun updateAddressLocation(address: String) {
+        _locationScreenState.value = locationScreenState.value.copy(addressString = address)
+
+        viewModelScope.launch {
+            val response = OpenMeteoInstance.getGeocodingService().getLocation(
+                name = address
+            )
+
+            _locationScreenState.value =
+                locationScreenState.value.copy(addressLocationResponse = response)
+        }
     }
 }

@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobileweatherapp.util.settings.UserLocation
-import com.example.openmeteoapi.di.OpenWeatherInstance
+import com.example.openmeteoapi.di.OpenMeteoInstance
 import com.example.openmeteoapi.model.DailyWeatherData
 import com.example.openmeteoapi.model.WeatherData
 import com.example.openmeteoapi.util.WeatherUtil
@@ -52,7 +52,7 @@ class WeatherViewModel : ViewModel() {
         viewModelScope.launch {
             _weatherScreenState.value.location?.let {
                 try {
-                    val response = OpenWeatherInstance.getService().getForecast(
+                    val response = OpenMeteoInstance.getWeatherService().getForecast(
                         lat = it.latitude,
                         lon = it.longitude,
                     )

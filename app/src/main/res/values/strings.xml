@@ -23,4 +23,6 @@
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
     <string name="saved_locations">Saved locations</string>
+    <string name="address">Address</string>
+    <string name="edit">Edit</string>
 </resources>
