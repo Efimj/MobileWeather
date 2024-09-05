@@ -48,4 +48,8 @@ data class LocationData(
     val admin3: String?,
     @SerializedName("admin4")
     val admin4: String?
-)
+) {
+    fun getAddress(): String {
+        return listOfNotNull(this.country, this.name).joinToString(", ")
+    }
+}
