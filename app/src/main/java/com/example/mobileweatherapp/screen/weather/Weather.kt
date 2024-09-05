@@ -1,32 +1,31 @@
 package com.example.mobileweatherapp.screen.weather
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.AddLocation
+import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CloudUpload
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -37,9 +36,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +53,7 @@ import androidx.navigation.NavHostController
 import com.example.mobileweatherapp.R
 import com.example.mobileweatherapp.navigation.NavigationHelper.navigateToSecondary
 import com.example.mobileweatherapp.navigation.Screen
+import com.example.mobileweatherapp.ui.components.CustomFAB
 import com.example.mobileweatherapp.ui.components.HorizontalSpacer
 import com.example.mobileweatherapp.ui.components.LocationCard
 import com.example.mobileweatherapp.ui.components.Stub
@@ -123,9 +127,10 @@ fun WeatherScreenContent(
                     Location(
                         state = state,
                         changeLocation = changeLocation,
-                        addLocation = addLocation
+                        addLocation = addLocation,
+                        onUpdate = { settings.selectedLocation?.let { changeLocation(it) } }
                     )
-                    VerticalSpacer(value = 10.dp)
+                    VerticalSpacer(value = 20.dp)
                     AnimatedContent(state.selectedDay) {
                         Text(
                             modifier = Modifier
@@ -163,14 +168,20 @@ fun WeatherScreenContent(
 private fun Location(
     state: WeatherScreenState,
     changeLocation: (UserLocation) -> Unit,
-    addLocation: () -> Unit
+    addLocation: () -> Unit,
+    onUpdate: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     Row(
-        modifier = Modifier.padding(horizontal = 20.dp),
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .clip(CircleShape)
+            .clickable { scope.launch { sheetState.show() } }
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -183,24 +194,10 @@ private fun Location(
             modifier = Modifier.weight(1f),
             text = state.location?.address ?: stringResource(R.string.address_unknown),
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        HorizontalSpacer(value = 20.dp)
-        Card(modifier = Modifier.size(45.dp), shape = MaterialTheme.shapes.small) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { scope.launch { sheetState.show() } },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Settings,
-                    contentDescription = null
-                )
-            }
-        }
     }
 
     if (sheetState.isVisible) {
@@ -212,6 +209,9 @@ private fun Location(
                 }
             },
         ) {
+            var editing by remember { mutableStateOf(false) }
+            var selectedLocations by remember { mutableStateOf(emptyList<UserLocation>()) }
+
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     modifier = Modifier
@@ -229,18 +229,30 @@ private fun Location(
                     contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
                     items(settings.locations.toList()) { location ->
+                        val isSelected =
+                            if (editing) selectedLocations.contains(location) else location == settings.selectedLocation
+
                         LocationCard(
+                            modifier = Modifier.animateItem(),
                             location = location,
-                            isSelected = location == settings.selectedLocation,
+                            isSelected = isSelected,
                             onClick = {
-                                scope.launch {
-                                    sheetState.hide()
-                                }.invokeOnCompletion {
-                                    SettingsManager.update(
-                                        context = context,
-                                        settings = settings.copy(selectedLocation = location)
-                                    )
-                                    changeLocation(location)
+                                if (editing) {
+                                    if (selectedLocations.size < settings.locations.size - 1)
+                                        selectedLocations =
+                                            if (isSelected) selectedLocations.minus(location) else selectedLocations.plus(
+                                                location
+                                            )
+                                } else {
+                                    scope.launch {
+                                        sheetState.hide()
+                                    }.invokeOnCompletion {
+                                        SettingsManager.update(
+                                            context = context,
+                                            settings = settings.copy(selectedLocation = location)
+                                        )
+                                        changeLocation(location)
+                                    }
                                 }
                             }
                         )
@@ -253,33 +265,51 @@ private fun Location(
                         .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    ExtendedFloatingActionButton(
+                    CustomFAB(
+                        modifier = Modifier.padding(start = 10.dp),
                         onClick = {
-                            scope.launch {
-                                sheetState.hide()
-                            }.invokeOnCompletion { addLocation() }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Rounded.AddLocation,
-                                contentDescription = null
-                            )
-                        },
-                        text = { Text(text = stringResource(R.string.add_location)) },
-                    )
-                    HorizontalSpacer(value = 10.dp)
-                    ExtendedFloatingActionButton(
-                        onClick = {
+                            if (editing) {
+                                if (settings.locations.size < 2) return@CustomFAB
+                                val newLocations = settings.locations.minus(selectedLocations)
+                                val selectedLocation =
+                                    if (selectedLocations.contains(settings.selectedLocation)) newLocations.first() else settings.selectedLocation
+                                val changedCurrentLocation =
+                                    selectedLocations.contains(settings.selectedLocation)
 
+                                scope.launch {
+                                    SettingsManager.update(
+                                        context = context,
+                                        settings = settings.copy(
+                                            locations = newLocations,
+                                            selectedLocation = selectedLocation
+                                        )
+                                    )
+                                    if (changedCurrentLocation) onUpdate()
+                                    editing = false
+                                }
+                            } else {
+                                scope.launch {
+                                    sheetState.hide()
+                                }.invokeOnCompletion { addLocation() }
+                            }
                         },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Edit,
-                                contentDescription = null
-                            )
-                        },
-                        text = { Text(text = stringResource(R.string.edit)) },
+                        icon = if (editing) Icons.Rounded.Delete else Icons.Rounded.AddLocation,
+                        text = if (editing) stringResource(R.string.delete) else stringResource(
+                            R.string.add_location
+                        )
                     )
+                    AnimatedContent(settings.locations.size > 1) {
+                        if (it) {
+                            CustomFAB(
+                                modifier = Modifier.padding(start = 10.dp),
+                                onClick = { editing = !editing },
+                                icon = if (editing) Icons.Rounded.Cancel else Icons.Rounded.Edit,
+                                text = if (editing) stringResource(R.string.cancel) else stringResource(
+                                    R.string.edit
+                                )
+                            )
+                        }
+                    }
                 }
                 VerticalSpacer(value = 40.dp)
             }

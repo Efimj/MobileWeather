@@ -25,10 +25,16 @@ import com.example.mobileweatherapp.R
 import com.example.mobileweatherapp.util.settings.UserLocation
 
 @Composable
-fun LocationCard(location: UserLocation, isSelected: Boolean, onClick: () -> Unit) {
+fun LocationCard(
+    modifier: Modifier = Modifier,
+    location: UserLocation,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     val borderColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
 
     Card(
+        modifier = modifier,
         border = BorderStroke(width = 2.dp, color = borderColor),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
