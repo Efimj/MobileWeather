@@ -35,12 +35,12 @@ fun TimeWeatherCard(
     val tempText = "${currentWeather.temperature[hour].roundToInt()}°"
     val humidityText = "${currentWeather.relativeHumidity[hour]}%"
 
-    val borderColor by animateColorAsState(if (isNow) MaterialTheme.colorScheme.primary else Color.Transparent)
+    val backgroundColor by animateColorAsState(if (isNow) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+    val color by animateColorAsState(if (isNow) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onPrimaryContainer)
 
     Card(
         shape = MaterialTheme.shapes.small,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        border = BorderStroke(width = 2.dp, color = borderColor)
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
     ) {
         Column(
             modifier = Modifier.size(70.dp),
@@ -49,7 +49,7 @@ fun TimeWeatherCard(
         ) {
             Text(
                 text = tempText,
-                color = MaterialTheme.colorScheme.primary,
+                color = color,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 maxLines = 1
@@ -59,7 +59,8 @@ fun TimeWeatherCard(
                 text = timeText,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
-                maxLines = 1
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.example.mobileweatherapp.screen.weather
 
+import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -64,6 +65,7 @@ import com.example.mobileweatherapp.ui.helper.LocaleProvider
 import com.example.mobileweatherapp.util.settings.SettingsManager
 import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.mobileweatherapp.util.settings.UserLocation
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -180,7 +182,7 @@ private fun Location(
             .padding(horizontal = 20.dp)
             .clip(CircleShape)
             .clickable { scope.launch { sheetState.show() } }
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -193,7 +195,7 @@ private fun Location(
         Text(
             modifier = Modifier.weight(1f),
             text = state.location?.address ?: stringResource(R.string.address_unknown),
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -238,11 +240,13 @@ private fun Location(
                             isSelected = isSelected,
                             onClick = {
                                 if (editing) {
-                                    if (selectedLocations.size < settings.locations.size - 1)
-                                        selectedLocations =
-                                            if (isSelected) selectedLocations.minus(location) else selectedLocations.plus(
-                                                location
-                                            )
+                                    selectedLocations = if (isSelected) {
+                                        selectedLocations.minus(location)
+                                    } else if (selectedLocations.size < settings.locations.size - 1) {
+                                        selectedLocations.plus(location)
+                                    } else {
+                                        selectedLocations
+                                    }
                                 } else {
                                     scope.launch {
                                         sheetState.hide()
@@ -265,48 +269,44 @@ private fun Location(
                         .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    val icon = if (editing) Icons.Rounded.Delete else Icons.Rounded.AddLocation
+                    val text = if (editing) stringResource(R.string.delete) else stringResource(
+                        R.string.add_location
+                    )
+
                     CustomFAB(
                         modifier = Modifier.padding(start = 10.dp),
                         onClick = {
                             if (editing) {
-                                if (settings.locations.size < 2) return@CustomFAB
-                                val newLocations = settings.locations.minus(selectedLocations)
-                                val selectedLocation =
-                                    if (selectedLocations.contains(settings.selectedLocation)) newLocations.first() else settings.selectedLocation
-                                val changedCurrentLocation =
-                                    selectedLocations.contains(settings.selectedLocation)
-
-                                scope.launch {
-                                    SettingsManager.update(
-                                        context = context,
-                                        settings = settings.copy(
-                                            locations = newLocations,
-                                            selectedLocation = selectedLocation
-                                        )
-                                    )
-                                    if (changedCurrentLocation) onUpdate()
-                                    editing = false
-                                }
+                                editing = false
+                                onDelete(
+                                    selectedLocations = selectedLocations,
+                                    scope = scope,
+                                    context = context,
+                                    onUpdate = onUpdate
+                                )
                             } else {
                                 scope.launch {
                                     sheetState.hide()
                                 }.invokeOnCompletion { addLocation() }
                             }
                         },
-                        icon = if (editing) Icons.Rounded.Delete else Icons.Rounded.AddLocation,
-                        text = if (editing) stringResource(R.string.delete) else stringResource(
-                            R.string.add_location
-                        )
+                        icon = icon,
+                        text = text,
                     )
-                    AnimatedContent(settings.locations.size > 1) {
-                        if (it) {
+                    AnimatedContent(
+                        targetState = settings.locations.size > 1
+                    ) { isMultipleLocations ->
+                        if (isMultipleLocations) {
+                            val icon = if (editing) Icons.Rounded.Cancel else Icons.Rounded.Edit
+                            val text =
+                                if (editing) stringResource(R.string.cancel) else stringResource(R.string.edit)
+
                             CustomFAB(
                                 modifier = Modifier.padding(start = 10.dp),
                                 onClick = { editing = !editing },
-                                icon = if (editing) Icons.Rounded.Cancel else Icons.Rounded.Edit,
-                                text = if (editing) stringResource(R.string.cancel) else stringResource(
-                                    R.string.edit
-                                )
+                                icon = icon,
+                                text = text
                             )
                         }
                     }
@@ -314,6 +314,31 @@ private fun Location(
                 VerticalSpacer(value = 40.dp)
             }
         }
+    }
+}
+
+private fun onDelete(
+    selectedLocations: List<UserLocation>,
+    scope: CoroutineScope,
+    context: Context,
+    onUpdate: () -> Unit,
+) {
+    if (settings.locations.size < 2) return
+
+    val isLocationChanged = selectedLocations.contains(settings.selectedLocation)
+    val newLocations = settings.locations - selectedLocations
+    val selectedLocation =
+        newLocations.firstOrNull { it != settings.selectedLocation } ?: settings.selectedLocation
+
+    scope.launch {
+        SettingsManager.update(
+            context = context,
+            settings = settings.copy(
+                locations = newLocations,
+                selectedLocation = selectedLocation
+            )
+        )
+        if (isLocationChanged) onUpdate()
     }
 }
 
