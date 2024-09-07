@@ -1,5 +1,6 @@
 package com.example.openmeteoapi.util
 
+import android.util.Log
 import com.example.openmeteoapi.model.DailyWeatherData
 import com.example.openmeteoapi.model.WeatherData
 import java.time.LocalDate
@@ -16,6 +17,7 @@ object WeatherUtil {
      */
     fun groupWeatherByDay(weatherData: WeatherData): Map<LocalDate, DailyWeatherData> {
         val dateFormatter = DateTimeFormatter.ISO_DATE_TIME
+
         return weatherData.hourly.time.indices.groupBy { index ->
             LocalDate.parse(
                 weatherData.hourly.time[index],
@@ -28,7 +30,7 @@ object WeatherUtil {
                 date = entry.key,
                 temperature = indices.map { weatherData.hourly.temperature[it] },
                 relativeHumidity = indices.map { weatherData.hourly.relativeHumidity[it] },
-                weatherCode = indices.map { weatherData.hourly.weatherCode[it] }
+                weather = indices.map { weatherData.hourly.weatherList()[it] }
             )
         }
     }

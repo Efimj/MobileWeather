@@ -6,9 +6,9 @@ import com.example.openmeteoapi.R
 
 enum class WeatherCode(
     val code: Int,
-    @StringRes description: Int,
-    @DrawableRes dayIcon: Int,
-    @DrawableRes nightIcon: Int? = null,
+    @StringRes val description: Int,
+    @DrawableRes val dayIcon: Int,
+    @DrawableRes val nightIcon: Int? = null,
 ) {
     CLEAR_SKY(0, R.string.clear_sky, R.drawable.clear_day, R.drawable.clear_night),
     MAINLY_CLEAR(
@@ -80,5 +80,13 @@ enum class WeatherCode(
         99,
         R.string.thunderstorm_with_heavy_hail,
         R.drawable.strong_thunderstorms
-    )
+    );
+
+    fun getWeatherIcon(isNight: Boolean): Int {
+        return if (isNight && this.nightIcon != null) {
+            this.nightIcon
+        } else {
+            this.dayIcon
+        }
+    }
 }

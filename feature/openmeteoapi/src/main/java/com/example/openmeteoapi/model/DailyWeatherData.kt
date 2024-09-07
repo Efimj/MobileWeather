@@ -6,5 +6,5 @@ data class DailyWeatherData(
     val date: LocalDate,
     val temperature: List<Double>,
     val relativeHumidity: List<Int>,
-    val weatherCode: List<Int>
+    val weather: List<WeatherCode>,
 )

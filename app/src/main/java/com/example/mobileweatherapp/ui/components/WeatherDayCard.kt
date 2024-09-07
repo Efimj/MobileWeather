@@ -2,23 +2,33 @@ package com.example.mobileweatherapp.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.mobileweatherapp.R
+import com.example.mobileweatherapp.util.settings.NightMode
+import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.openmeteoapi.model.DailyWeatherData
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -35,8 +45,23 @@ fun WeatherDayCard(
 
     val dateText =
         if (date == LocalDate.now()) stringResource(R.string.today) else date.format(formatter)
-    val tempText =
-        "${weather.temperature.max().roundToInt()}°/${weather.temperature.min().roundToInt()}°"
+
+    val temperatureText = AnnotatedString.Builder().apply {
+        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
+            append("${weather.temperature.max().roundToInt()}°")
+        }
+        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+            append("/${weather.temperature.min().roundToInt()}°")
+        }
+    }.toAnnotatedString()
+
+    val weatherImage = weather.weather.maxByOrNull { it.code }?.getWeatherIcon(
+        when (settings.nightMode) {
+            NightMode.Light -> false
+            NightMode.Dark -> true
+            else -> isSystemInDarkTheme()
+        }
+    ) ?: R.drawable.not_available
 
     val borderColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
 
@@ -49,15 +74,22 @@ fun WeatherDayCard(
                 .fillMaxWidth()
                 .clickable { onClick(date) }
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = dateText,
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
             )
+            Spacer(modifier = Modifier.weight(1f))
+            Image(
+                modifier = Modifier.size(24.dp),
+                painter = painterResource(weatherImage),
+                contentDescription = null
+            )
+            HorizontalSpacer(value = 20.dp)
             Text(
-                text = tempText,
+                text = temperatureText,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.primary

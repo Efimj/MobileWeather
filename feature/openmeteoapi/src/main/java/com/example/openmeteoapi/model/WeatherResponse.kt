@@ -43,4 +43,8 @@ data class Hourly(
     val relativeHumidity: List<Int>,
     @SerializedName("weather_code")
     val weatherCode: List<Int>
-)
+) {
+    fun weatherList() = weatherCode.mapNotNull { code ->
+        WeatherCode.entries.find { it.code == code }
+    }
+}
