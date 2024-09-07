@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -87,7 +88,7 @@ fun WeatherDayCard(
                 painter = painterResource(weatherImage),
                 contentDescription = null
             )
-            HorizontalSpacer(value = 20.dp)
+            Spacer(modifier = Modifier.width(30.dp))
             Text(
                 text = temperatureText,
                 style = MaterialTheme.typography.titleMedium,
