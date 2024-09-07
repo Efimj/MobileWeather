@@ -98,4 +98,7 @@ dependencies {
 
     // Pull to refresh
     implementation(libs.material3)
+
+    // Fading edges
+    implementation(libs.fadingEdges)
 }

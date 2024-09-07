@@ -62,6 +62,7 @@ import com.example.mobileweatherapp.ui.components.TimeWeatherCard
 import com.example.mobileweatherapp.ui.components.VerticalSpacer
 import com.example.mobileweatherapp.ui.components.WeatherDayCard
 import com.example.mobileweatherapp.ui.helper.LocaleProvider
+import com.example.mobileweatherapp.ui.modifier.fadingEdges
 import com.example.mobileweatherapp.util.settings.SettingsManager
 import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.mobileweatherapp.util.settings.UserLocation
@@ -225,8 +226,14 @@ private fun Location(
                     color = MaterialTheme.colorScheme.onSurface.copy(.8f)
                 )
                 VerticalSpacer(value = 10.dp)
+
+                val scroll = rememberLazyListState()
+
                 LazyColumn(
-                    modifier = Modifier.weight(1f, false),
+                    state = scroll,
+                    modifier = Modifier
+                        .weight(1f, false)
+                        .fadingEdges(scrollableState = scroll, isVertical = true),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
@@ -355,8 +362,9 @@ private fun DayWeather(state: WeatherScreenState) {
     if (currentWeather == null) return
 
     LazyRow(
+        modifier = Modifier.fadingEdges(scroll),
         state = scroll,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) {
         val timeRange = 0..23
