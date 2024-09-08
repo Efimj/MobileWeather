@@ -1,10 +1,9 @@
 package com.example.openmeteoapi.util
 
-import android.util.Log
 import com.example.openmeteoapi.model.DailyWeatherData
 import com.example.openmeteoapi.model.WeatherData
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
 
 object WeatherUtil {
     /**
@@ -16,22 +15,38 @@ object WeatherUtil {
      *         weather information for a specific day.
      */
     fun groupWeatherByDay(weatherData: WeatherData): Map<LocalDate, DailyWeatherData> {
-        val dateFormatter = DateTimeFormatter.ISO_DATE_TIME
+        val splitTemperature = weatherData.hourly.temperature.chunked(24)
+        val splitRelativeHumidity = weatherData.hourly.relativeHumidity.chunked(24)
+        val splitWeatherCode = weatherData.hourly.weatherList().chunked(24)
 
-        return weatherData.hourly.time.indices.groupBy { index ->
-            LocalDate.parse(
-                weatherData.hourly.time[index],
-                dateFormatter
-            )
-        }.mapValues { entry ->
-            val indices = entry.value
+        val weatherMap = mutableMapOf<LocalDate, DailyWeatherData>()
 
-            DailyWeatherData(
-                date = entry.key,
-                temperature = indices.map { weatherData.hourly.temperature[it] },
-                relativeHumidity = indices.map { weatherData.hourly.relativeHumidity[it] },
-                weather = indices.map { weatherData.hourly.weatherList()[it] }
+        weatherData.daily.date.forEachIndexed { index, date ->
+            val date = LocalDate.parse(date)
+
+            weatherMap[date] = DailyWeatherData(
+                date = date,
+                temperature = splitTemperature[index],
+                relativeHumidity = splitRelativeHumidity[index],
+                weather = splitWeatherCode[index],
+                temperatureMax = weatherData.daily.temperature2mMax[index],
+                temperatureMin = weatherData.daily.temperature2mMin[index],
+                apparentTemperatureMax = weatherData.daily.apparentTemperatureMax[index],
+                apparentTemperatureMin = weatherData.daily.apparentTemperatureMin[index],
+                sunrise = LocalDateTime.parse(weatherData.daily.sunrise[index]),
+                sunset = LocalDateTime.parse(weatherData.daily.sunset[index]),
+                daylightDuration = weatherData.daily.daylightDuration[index],
+                sunshineDuration = weatherData.daily.sunshineDuration[index],
+                uvIndexMax = weatherData.daily.uvIndexMax[index],
+                uvIndexClearSkyMax = weatherData.daily.uvIndexClearSkyMax[index],
+                precipitationSum = weatherData.daily.precipitationSum[index],
+                precipitationProbabilityMax = weatherData.daily.precipitationProbabilityMax[index],
+                windSpeedMax = weatherData.daily.windSpeed10mMax[index],
+                windGustsMax = weatherData.daily.windGusts10mMax[index],
+                windDirectionDominant = weatherData.daily.windDirection10mDominant[index]
             )
         }
+
+        return weatherMap
     }
 }
