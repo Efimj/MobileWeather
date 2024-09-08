@@ -28,7 +28,7 @@ object WeatherUtil {
                 date = date,
                 temperature = splitTemperature[index],
                 relativeHumidity = splitRelativeHumidity[index],
-                weather = splitWeatherCode[index],
+                weatherHourly = splitWeatherCode[index],
                 temperatureMax = weatherData.daily.temperature2mMax[index],
                 temperatureMin = weatherData.daily.temperature2mMin[index],
                 apparentTemperatureMax = weatherData.daily.apparentTemperatureMax[index],
@@ -43,7 +43,8 @@ object WeatherUtil {
                 precipitationProbabilityMax = weatherData.daily.precipitationProbabilityMax[index],
                 windSpeedMax = weatherData.daily.windSpeed10mMax[index],
                 windGustsMax = weatherData.daily.windGusts10mMax[index],
-                windDirectionDominant = weatherData.daily.windDirection10mDominant[index]
+                windDirectionDominant = weatherData.daily.windDirection10mDominant[index],
+                weather = weatherData.daily.weatherList()[index]
             )
         }
 

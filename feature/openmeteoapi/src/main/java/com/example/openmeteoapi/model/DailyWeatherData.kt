@@ -8,7 +8,8 @@ data class DailyWeatherData(
     val date: LocalDate,
     val temperature: List<Double>,
     val relativeHumidity: List<Int>,
-    val weather: List<WeatherCode>,
+    val weatherHourly: List<WeatherCode>,
+    val weather: WeatherCode,
     val temperatureMax: Double,
     val temperatureMin: Double,
     val apparentTemperatureMax: Double,
@@ -24,4 +25,8 @@ data class DailyWeatherData(
     val windSpeedMax: Double,
     val windGustsMax: Double,
     val windDirectionDominant: Int,
-)
+) {
+    fun checkIsNight(time: LocalTime): Boolean {
+        return (time.isAfter(this.sunrise.toLocalTime()) && time.isBefore(this.sunset.toLocalTime())).not()
+    }
+}

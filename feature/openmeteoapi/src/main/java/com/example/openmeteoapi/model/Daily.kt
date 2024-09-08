@@ -20,4 +20,8 @@ data class Daily(
     @SerializedName("wind_speed_10m_max") val windSpeed10mMax: List<Double>,
     @SerializedName("wind_gusts_10m_max") val windGusts10mMax: List<Double>,
     @SerializedName("wind_direction_10m_dominant") val windDirection10mDominant: List<Int>
-)
+){
+    fun weatherList() = weatherCode.mapNotNull { code ->
+        WeatherCode.entries.find { it.code == code }
+    }
+}

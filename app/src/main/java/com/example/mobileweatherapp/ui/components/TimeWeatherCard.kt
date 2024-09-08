@@ -3,7 +3,6 @@ package com.example.mobileweatherapp.ui.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,8 +21,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobileweatherapp.R
-import com.example.mobileweatherapp.util.settings.NightMode
-import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.openmeteoapi.model.DailyWeatherData
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -35,9 +32,13 @@ fun TimeWeatherCard(
     currentWeather: DailyWeatherData
 ) {
     val isNow = LocalTime.now().hour == hour
+    val currentTime = LocalTime.of(hour, 0)
     val timeText =
-        if (isNow) stringResource(R.string.now) else LocalTime.of(hour, 0)
-            .format(DateTimeFormatter.ofPattern("h:mm a"))
+        if (isNow) stringResource(R.string.now) else currentTime.format(
+            DateTimeFormatter.ofPattern(
+                "h:mm a"
+            )
+        )
     val tempText = "${currentWeather.temperature.getOrElse(hour, { 0.0 }).roundToInt()}°"
     val humidityText = "${currentWeather.relativeHumidity.getOrNull(hour) ?: ""}%"
 
@@ -71,13 +72,9 @@ fun TimeWeatherCard(
                     HorizontalSpacer(value = 7.dp)
                     AnimatedContent(
                         painterResource(
-                            currentWeather.weather.getOrNull(hour)
+                            currentWeather.weatherHourly.getOrNull(hour)
                                 ?.getWeatherIcon(
-                                    when (settings.nightMode) {
-                                        NightMode.Light -> false
-                                        NightMode.Dark -> true
-                                        else -> isSystemInDarkTheme()
-                                    }
+                                    currentWeather.checkIsNight(currentTime)
                                 ) ?: R.drawable.not_available
                         )
                     ) {

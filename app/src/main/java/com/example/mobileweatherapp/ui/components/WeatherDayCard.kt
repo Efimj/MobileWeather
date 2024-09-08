@@ -4,7 +4,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,10 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.mobileweatherapp.R
-import com.example.mobileweatherapp.util.settings.NightMode
-import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.openmeteoapi.model.DailyWeatherData
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
@@ -56,13 +54,9 @@ fun WeatherDayCard(
         }
     }.toAnnotatedString()
 
-    val weatherImage = weather.weather.maxByOrNull { it.code }?.getWeatherIcon(
-        when (settings.nightMode) {
-            NightMode.Light -> false
-            NightMode.Dark -> true
-            else -> isSystemInDarkTheme()
-        }
-    ) ?: R.drawable.not_available
+    val weatherImage = weather.weather.getWeatherIcon(
+        weather.checkIsNight(LocalTime.now())
+    )
 
     val borderColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
 
