@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobileweatherapp.R
-import com.example.openmeteoapi.model.DailyWeatherData
+import com.example.openmeteoapi.model.DayWeatherData
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -29,7 +29,7 @@ import kotlin.math.roundToInt
 @Composable
 fun TimeWeatherCard(
     hour: Int,
-    currentWeather: DailyWeatherData
+    currentWeather: DayWeatherData
 ) {
     val isNow = LocalTime.now().hour == hour
     val currentTime = LocalTime.of(hour, 0)
@@ -42,8 +42,8 @@ fun TimeWeatherCard(
     val tempText = "${currentWeather.temperature.getOrElse(hour, { 0.0 }).roundToInt()}°"
     val humidityText = "${currentWeather.relativeHumidity.getOrNull(hour) ?: ""}%"
 
-    val backgroundColor by animateColorAsState(if (isNow) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
-    val color by animateColorAsState(if (isNow) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onPrimaryContainer)
+    val backgroundColor by animateColorAsState(if (isNow) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+    val color by animateColorAsState(if (isNow) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)
 
     Card(
         shape = MaterialTheme.shapes.small,

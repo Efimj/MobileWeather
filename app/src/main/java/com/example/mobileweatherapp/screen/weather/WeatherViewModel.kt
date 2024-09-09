@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobileweatherapp.util.settings.UserLocation
 import com.example.openmeteoapi.di.OpenMeteoInstance
-import com.example.openmeteoapi.model.DailyWeatherData
+import com.example.openmeteoapi.model.DayWeatherData
 import com.example.openmeteoapi.model.WeatherData
 import com.example.openmeteoapi.util.WeatherUtil
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +32,7 @@ enum class WeatherResponseState {
  */
 data class WeatherScreenState(
     val weather: WeatherData? = null,
-    val weatherByDay: Map<LocalDate, DailyWeatherData> = emptyMap(),
+    val weatherByDay: Map<LocalDate, DayWeatherData> = emptyMap(),
     val weatherResponseState: WeatherResponseState = WeatherResponseState.Done,
     val selectedDay: LocalDate = LocalDate.now(),
     val location: UserLocation? = null,

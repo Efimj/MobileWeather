@@ -2,6 +2,7 @@ package com.example.mobileweatherapp.screen.weather
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -12,12 +13,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
@@ -45,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,11 +70,13 @@ import com.example.mobileweatherapp.ui.modifier.fadingEdges
 import com.example.mobileweatherapp.util.settings.SettingsManager
 import com.example.mobileweatherapp.util.settings.SettingsManager.settings
 import com.example.mobileweatherapp.util.settings.UserLocation
+import com.example.openmeteoapi.model.DayWeatherData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
 /**
  * Provide weather screen.
@@ -134,6 +140,9 @@ fun WeatherScreenContent(
                         onUpdate = { settings.selectedLocation?.let { changeLocation(it) } }
                     )
                     VerticalSpacer(value = 20.dp)
+                    state.weatherByDay.getOrDefault(state.selectedDay, null)
+                        ?.let { WeatherHeader(weather = it) }
+                    VerticalSpacer(value = 20.dp)
                     AnimatedContent(state.selectedDay) {
                         Text(
                             modifier = Modifier
@@ -162,6 +171,68 @@ fun WeatherScreenContent(
                     ForecastDaysList(state, onSelectDay)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun WeatherHeader(weather: DayWeatherData) {
+    val hour = LocalTime.now().hour
+
+    val tempText = "${weather.temperature[hour].roundToInt()}°"
+    val currentTime = LocalTime.of(hour, 0)
+    val timeText = currentTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+    val temperatureMinMaxText =
+        "${weather.temperatureMax.roundToInt()}°/${weather.temperatureMin.roundToInt()}°"
+
+    val weatherImage = weather.weather.getWeatherIcon(
+        weather.checkIsNight(LocalTime.now())
+    )
+
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(20.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = timeText,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .8f)
+            )
+            Text(
+                text = tempText,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = temperatureMinMaxText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f)
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            AnimatedContent(painterResource(weatherImage)) {
+                Image(
+                    modifier = Modifier.size(54.dp),
+                    painter = it,
+                    contentDescription = null
+                )
+            }
+            Text(
+                text = stringResource(weather.weather.description),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .8f)
+            )
         }
     }
 }
@@ -364,7 +435,7 @@ private fun DayWeather(state: WeatherScreenState) {
     LazyRow(
         modifier = Modifier.fadingEdges(scroll),
         state = scroll,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) {
         val timeRange = 0..23
@@ -381,13 +452,40 @@ private fun ForecastDaysList(
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        state.weatherByDay.keys.forEach {
-            val weatherByDay = state.weatherByDay.getValue(it)
+        val keys = state.weatherByDay.keys
+        keys.forEachIndexed { index, localDate ->
+            val weatherByDay = state.weatherByDay.getValue(localDate)
+
+            val maxShapeVal = 12.dp
+            val minShapeVal = 6.dp
+
+            val shape = when {
+                index == 0 && keys.size == 1 -> RoundedCornerShape(maxShapeVal)
+                index == 0 -> RoundedCornerShape(
+                    topStart = maxShapeVal,
+                    topEnd = maxShapeVal,
+                    bottomEnd = minShapeVal,
+                    bottomStart = minShapeVal
+                )
+
+                index > 0 && index < keys.size - 1 -> RoundedCornerShape(minShapeVal)
+                index == keys.size - 1 -> RoundedCornerShape(
+                    bottomStart = maxShapeVal,
+                    bottomEnd = maxShapeVal,
+                    topStart = minShapeVal,
+                    topEnd = minShapeVal
+                )
+
+                else -> {
+                    RoundedCornerShape(maxShapeVal)
+                }
+            }
 
             WeatherDayCard(
                 weather = weatherByDay,
+                shape = shape,
                 isSelected = state.selectedDay == weatherByDay.date,
                 onClick = onSelectDay
             )

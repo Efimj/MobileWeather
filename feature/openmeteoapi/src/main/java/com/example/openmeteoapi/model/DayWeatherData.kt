@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-data class DailyWeatherData(
+data class DayWeatherData(
     val date: LocalDate,
     val temperature: List<Double>,
     val relativeHumidity: List<Int>,

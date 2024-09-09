@@ -1,6 +1,6 @@
 package com.example.openmeteoapi.util
 
-import com.example.openmeteoapi.model.DailyWeatherData
+import com.example.openmeteoapi.model.DayWeatherData
 import com.example.openmeteoapi.model.WeatherData
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -8,23 +8,23 @@ import java.time.LocalDateTime
 object WeatherUtil {
     /**
      * Groups the hourly weather data into a map where each key is a [LocalDate]
-     * and the corresponding value is a [DailyWeatherData].
+     * and the corresponding value is a [DayWeatherData].
      *
      * @param weatherData The hourly weather data to be grouped.
-     * @return A map of [LocalDate] to [DailyWeatherData] where each entry represents
+     * @return A map of [LocalDate] to [DayWeatherData] where each entry represents
      *         weather information for a specific day.
      */
-    fun groupWeatherByDay(weatherData: WeatherData): Map<LocalDate, DailyWeatherData> {
+    fun groupWeatherByDay(weatherData: WeatherData): Map<LocalDate, DayWeatherData> {
         val splitTemperature = weatherData.hourly.temperature.chunked(24)
         val splitRelativeHumidity = weatherData.hourly.relativeHumidity.chunked(24)
         val splitWeatherCode = weatherData.hourly.weatherList().chunked(24)
 
-        val weatherMap = mutableMapOf<LocalDate, DailyWeatherData>()
+        val weatherMap = mutableMapOf<LocalDate, DayWeatherData>()
 
         weatherData.daily.date.forEachIndexed { index, date ->
             val date = LocalDate.parse(date)
 
-            weatherMap[date] = DailyWeatherData(
+            weatherMap[date] = DayWeatherData(
                 date = date,
                 temperature = splitTemperature[index],
                 relativeHumidity = splitRelativeHumidity[index],
