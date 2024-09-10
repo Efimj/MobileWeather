@@ -1,22 +1,31 @@
 package com.example.mobileweatherapp.screen.weather
 
 import android.content.Context
+import android.widget.Space
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -47,11 +56,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -76,6 +90,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -169,6 +184,105 @@ fun WeatherScreenContent(
                     )
                     VerticalSpacer(value = 10.dp)
                     ForecastDaysList(state, onSelectDay)
+                    VerticalSpacer(value = 20.dp)
+                    state.weatherByDay.getOrDefault(state.selectedDay, null)
+                        ?.let { Humidity(it) }
+                    VerticalSpacer(value = 40.dp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Humidity(it: DayWeatherData) {
+    val time = LocalTime.now()
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(vertical = 20.dp)
+    ) {
+
+        val averageHumidity = it.relativeHumidity.average().toInt()
+        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Text(
+                text = stringResource(R.string.average_humidity),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = .8f)
+            )
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = MaterialTheme.typography.headlineMedium.toSpanStyle()) {
+                        append("$averageHumidity")
+                    }
+                    withStyle(style = MaterialTheme.typography.titleMedium.toSpanStyle()) {
+                        append("%")
+                    }
+                },
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+        VerticalSpacer(value = 4.dp)
+
+        val scroll = rememberLazyListState()
+
+        LaunchedEffect(it.relativeHumidity) {
+            scroll.animateScrollToItem(time.hour)
+        }
+
+        LazyRow(
+            state = scroll,
+            modifier = Modifier
+                .height(100.dp)
+                .fadingEdges(scroll),
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            itemsIndexed(it.relativeHumidity) { index, humidity ->
+                val isNow = time.hour == index
+                val currentTime = LocalTime.of(index, 0)
+                val timeText =
+                    if (isNow) stringResource(R.string.now) else currentTime.format(
+                        DateTimeFormatter.ofPattern("h a")
+                    )
+
+                Column(
+                    modifier = Modifier.width(30.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val barHeight = humidity / 100f
+
+                    Spacer(modifier = Modifier.weight(1 - barHeight))
+                    Text(
+                        text = "${humidity}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
+                    )
+
+                    val clampedPercentage = humidity / 100f
+
+                    val backgroundColor = lerp(
+                        MaterialTheme.colorScheme.onPrimary,
+                        MaterialTheme.colorScheme.primary,
+                        clampedPercentage
+                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .fillMaxWidth()
+                            .weight(barHeight)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(backgroundColor)
+                    )
+                    Text(
+                        text = timeText,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
             }
         }

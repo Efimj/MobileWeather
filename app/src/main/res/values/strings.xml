@@ -27,4 +27,5 @@
     <string name="edit">Edit</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
+    <string name="average_humidity">Average humidity</string>
 </resources>

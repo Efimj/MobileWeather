@@ -36,13 +36,13 @@ fun TimeWeatherCard(
     val timeText =
         if (isNow) stringResource(R.string.now) else currentTime.format(
             DateTimeFormatter.ofPattern(
-                "h:mm a"
+                "h a"
             )
         )
     val tempText = "${currentWeather.temperature.getOrElse(hour, { 0.0 }).roundToInt()}°"
     val humidityText = "${currentWeather.relativeHumidity.getOrNull(hour) ?: ""}%"
 
-    val backgroundColor by animateColorAsState(if (isNow) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+    val backgroundColor by animateColorAsState(if (isNow) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer)
     val color by animateColorAsState(if (isNow) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSecondaryContainer)
 
     Card(
