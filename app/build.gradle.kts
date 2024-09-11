@@ -8,12 +8,12 @@ plugins {
 val javaVersion = JavaVersion.toVersion(libs.versions.jvmTarget.get())
 
 android {
-    namespace = "com.example.mobileweatherapp"
+    namespace = "com.yefim.mobileweatherapp"
     compileSdk = libs.versions.androidCompileSdk.get().toIntOrNull()
 
     defaultConfig {
 
-        applicationId = "com.weatherapp.freeweather.free.app.mobile.androidapp.weatherandroid"
+        applicationId = "com.yefim.mobileweatherapp"
         minSdk = libs.versions.androidMinSdk.get().toIntOrNull()
         targetSdk = libs.versions.androidTargetSdk.get().toIntOrNull()
         versionCode = libs.versions.versionCode.get().toIntOrNull()

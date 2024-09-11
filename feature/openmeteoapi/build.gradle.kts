@@ -6,7 +6,7 @@ plugins {
 val javaVersion = JavaVersion.toVersion(libs.versions.jvmTarget.get())
 
 android {
-    namespace = "com.example.openmeteoapi"
+    namespace = "com.yefim.openmeteoapi"
     compileSdk = libs.versions.androidCompileSdk.get().toIntOrNull()
 
     defaultConfig {
