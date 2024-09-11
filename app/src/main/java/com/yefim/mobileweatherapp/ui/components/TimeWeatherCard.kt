@@ -21,8 +21,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.yefim.mobileweatherapp.R
+import com.yefim.mobileweatherapp.util.DateTimeUtil
 import com.yefim.openmeteoapi.model.DayWeatherData
-import java.time.LocalTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
@@ -31,10 +33,10 @@ fun TimeWeatherCard(
     hour: Int,
     currentWeather: DayWeatherData
 ) {
-    val isNow = LocalTime.now().hour == hour
-    val currentTime = LocalTime.of(hour, 0)
+    val isNow = DateTimeUtil.getLocalDateTime().hour == hour
+    val currentTime = LocalTime(hour, 0)
     val timeText =
-        if (isNow) stringResource(R.string.now) else currentTime.format(
+        if (isNow) stringResource(R.string.now) else currentTime.toJavaLocalTime().format(
             DateTimeFormatter.ofPattern(
                 "h a"
             )

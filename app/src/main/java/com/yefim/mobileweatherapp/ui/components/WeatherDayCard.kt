@@ -28,9 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.yefim.mobileweatherapp.R
+import com.yefim.mobileweatherapp.util.DateTimeUtil
 import com.yefim.openmeteoapi.model.DayWeatherData
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
@@ -43,9 +44,10 @@ fun WeatherDayCard(
 ) {
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d")
     val date = weather.date
+    val currentDateTime = DateTimeUtil.getLocalDateTime()
 
     val dateText =
-        if (date == LocalDate.now()) stringResource(R.string.today) else date.format(formatter)
+        if (date == currentDateTime.date) stringResource(R.string.today) else date.toJavaLocalDate().format(formatter)
 
     val temperatureText = AnnotatedString.Builder().apply {
         withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
@@ -57,7 +59,7 @@ fun WeatherDayCard(
     }.toAnnotatedString()
 
     val weatherImage = weather.weather.getWeatherIcon(
-        weather.checkIsNight(LocalTime.now())
+        weather.checkIsNight(currentDateTime.time)
     )
 
     val borderColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)

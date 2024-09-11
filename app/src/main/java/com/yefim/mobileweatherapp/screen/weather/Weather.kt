@@ -76,14 +76,17 @@ import com.yefim.mobileweatherapp.ui.components.VerticalSpacer
 import com.yefim.mobileweatherapp.ui.components.WeatherDayCard
 import com.yefim.mobileweatherapp.ui.helper.LocaleProvider
 import com.yefim.mobileweatherapp.ui.modifier.fadingEdges
+import com.yefim.mobileweatherapp.util.DateTimeUtil
 import com.yefim.mobileweatherapp.util.settings.SettingsManager
 import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
-import com.yefim.mobileweatherapp.util.settings.UserLocation
+import com.yefim.mobileweatherapp.util.settings.WeatherForecast
 import com.yefim.openmeteoapi.model.DayWeatherData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -98,14 +101,14 @@ fun WeatherScreen(navController: NavHostController, viewModel: WeatherViewModel 
     val updateAction: () -> Unit = { viewModel.updateWeather() }
 
     LaunchedEffect(Unit) {
-        settings.selectedLocation?.let { viewModel.changeLocation(it) }
+        settings.selectedWeatherForecast?.let { viewModel.changeSelectedForecast(it) }
     }
 
     WeatherScreenContent(
         state = weatherState,
         onUpdate = updateAction,
         onSelectDay = viewModel::selectDay,
-        changeLocation = viewModel::changeLocation,
+        changeLocation = viewModel::changeSelectedForecast,
         addLocation = { navController.navigateToSecondary(Screen.Location) }
     )
 }
@@ -116,7 +119,7 @@ fun WeatherScreenContent(
     state: WeatherScreenState,
     onUpdate: () -> Unit,
     onSelectDay: (LocalDate) -> Unit,
-    changeLocation: (UserLocation) -> Unit,
+    changeLocation: (WeatherForecast) -> Unit,
     addLocation: () -> Unit
 ) {
     val insets = LocaleProvider.LocalInsetsPaddings.current
@@ -145,12 +148,12 @@ fun WeatherScreenContent(
                 ) {
                     Location(
                         state = state,
-                        changeLocation = changeLocation,
+                        changeForecast = changeLocation,
                         addLocation = addLocation,
-                        onUpdate = { settings.selectedLocation?.let { changeLocation(it) } }
+                        onUpdate = { settings.selectedWeatherForecast?.let { changeLocation(it) } }
                     )
                     VerticalSpacer(value = 20.dp)
-                    state.weatherByDay.getOrDefault(state.selectedDay, null)
+                    state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
                         ?.let { WeatherHeader(weather = it) }
                     VerticalSpacer(value = 20.dp)
                     AnimatedContent(state.selectedDay) {
@@ -159,7 +162,8 @@ fun WeatherScreenContent(
                                 .fillMaxWidth()
                                 .basicMarquee()
                                 .padding(horizontal = 20.dp),
-                            text = it.format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                            text = it.toJavaLocalDate()
+                                .format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface.copy(.8f)
@@ -180,7 +184,7 @@ fun WeatherScreenContent(
                     VerticalSpacer(value = 10.dp)
                     ForecastDaysList(state, onSelectDay)
                     VerticalSpacer(value = 20.dp)
-                    state.weatherByDay.getOrDefault(state.selectedDay, null)
+                    state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
                         ?.let { Humidity(it) }
                     VerticalSpacer(value = 40.dp)
                 }
@@ -191,7 +195,7 @@ fun WeatherScreenContent(
 
 @Composable
 private fun Humidity(it: DayWeatherData) {
-    val time = LocalTime.now()
+    val time = DateTimeUtil.getLocalDateTime()
     Column(
         modifier = Modifier
             .padding(horizontal = 20.dp)
@@ -238,11 +242,12 @@ private fun Humidity(it: DayWeatherData) {
         ) {
             itemsIndexed(it.relativeHumidity) { index, humidity ->
                 val isNow = time.hour == index
-                val currentTime = LocalTime.of(index, 0)
+                val currentTime = LocalTime(index, 0)
                 val timeText =
-                    if (isNow) stringResource(R.string.now) else currentTime.format(
-                        DateTimeFormatter.ofPattern("h a")
-                    )
+                    if (isNow) stringResource(R.string.now) else currentTime.toJavaLocalTime()
+                        .format(
+                            DateTimeFormatter.ofPattern("h a")
+                        )
 
                 Column(
                     modifier = Modifier.width(30.dp),
@@ -269,7 +274,7 @@ private fun Humidity(it: DayWeatherData) {
                         modifier = Modifier
                             .padding(vertical = 8.dp)
                             .fillMaxWidth()
-                            .weight(max(1+barHeight, 0.01f))
+                            .weight(max(1 + barHeight, 0.01f))
                             .clip(MaterialTheme.shapes.medium)
                             .background(backgroundColor)
                     )
@@ -287,16 +292,17 @@ private fun Humidity(it: DayWeatherData) {
 
 @Composable
 private fun WeatherHeader(weather: DayWeatherData) {
-    val hour = LocalTime.now().hour
+    val localDateTime = DateTimeUtil.getLocalDateTime()
+    val hour = localDateTime.hour
 
     val tempText = "${weather.temperature[hour].roundToInt()}°"
-    val currentTime = LocalTime.of(hour, 0)
-    val timeText = currentTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+    val currentTime = LocalTime(hour, 0)
+    val timeText = currentTime.toJavaLocalTime().format(DateTimeFormatter.ofPattern("h:mm a"))
     val temperatureMinMaxText =
         "${weather.temperatureMax.roundToInt()}°/${weather.temperatureMin.roundToInt()}°"
 
     val weatherImage = weather.weather.getWeatherIcon(
-        weather.checkIsNight(LocalTime.now())
+        weather.checkIsNight(localDateTime.time)
     )
 
     Row(
@@ -351,7 +357,7 @@ private fun WeatherHeader(weather: DayWeatherData) {
 @Composable
 private fun Location(
     state: WeatherScreenState,
-    changeLocation: (UserLocation) -> Unit,
+    changeForecast: (WeatherForecast) -> Unit,
     addLocation: () -> Unit,
     onUpdate: () -> Unit,
 ) {
@@ -376,7 +382,7 @@ private fun Location(
         HorizontalSpacer(value = 20.dp)
         Text(
             modifier = Modifier.weight(1f),
-            text = state.location?.address ?: stringResource(R.string.address_unknown),
+            text = state.forecast?.location?.address ?: stringResource(R.string.address_unknown),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             maxLines = 1,
@@ -394,7 +400,7 @@ private fun Location(
             },
         ) {
             var editing by remember { mutableStateOf(false) }
-            var selectedLocations by remember { mutableStateOf(emptyList<UserLocation>()) }
+            var selectedForecast by remember { mutableStateOf(emptyList<WeatherForecast>()) }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
@@ -418,22 +424,22 @@ private fun Location(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp)
                 ) {
-                    items(settings.locations.toList()) { location ->
+                    items(settings.weatherForecasts.toList()) { forecast ->
                         val isSelected =
-                            if (editing) selectedLocations.contains(location) else location == settings.selectedLocation
+                            if (editing) selectedForecast.contains(forecast) else forecast == settings.selectedWeatherForecast
 
                         LocationCard(
                             modifier = Modifier.animateItem(),
-                            location = location,
+                            location = forecast.location,
                             isSelected = isSelected,
                             onClick = {
                                 if (editing) {
-                                    selectedLocations = if (isSelected) {
-                                        selectedLocations.minus(location)
-                                    } else if (selectedLocations.size < settings.locations.size - 1) {
-                                        selectedLocations.plus(location)
+                                    selectedForecast = if (isSelected) {
+                                        selectedForecast.minus(forecast)
+                                    } else if (selectedForecast.size < settings.weatherForecasts.size - 1) {
+                                        selectedForecast.plus(forecast)
                                     } else {
-                                        selectedLocations
+                                        selectedForecast
                                     }
                                 } else {
                                     scope.launch {
@@ -441,9 +447,9 @@ private fun Location(
                                     }.invokeOnCompletion {
                                         SettingsManager.update(
                                             context = context,
-                                            settings = settings.copy(selectedLocation = location)
+                                            settings = settings.copy(selectedWeatherForecast = forecast)
                                         )
-                                        changeLocation(location)
+                                        changeForecast(forecast)
                                     }
                                 }
                             }
@@ -468,7 +474,7 @@ private fun Location(
                             if (editing) {
                                 editing = false
                                 onDelete(
-                                    selectedLocations = selectedLocations,
+                                    selectedForecast = selectedForecast,
                                     scope = scope,
                                     context = context,
                                     onUpdate = onUpdate
@@ -483,7 +489,7 @@ private fun Location(
                         text = text,
                     )
                     AnimatedContent(
-                        targetState = settings.locations.size > 1
+                        targetState = settings.weatherForecasts.size > 1
                     ) { isMultipleLocations ->
                         if (isMultipleLocations) {
                             val icon = if (editing) Icons.Rounded.Cancel else Icons.Rounded.Edit
@@ -506,24 +512,25 @@ private fun Location(
 }
 
 private fun onDelete(
-    selectedLocations: List<UserLocation>,
+    selectedForecast: List<WeatherForecast>,
     scope: CoroutineScope,
     context: Context,
     onUpdate: () -> Unit,
 ) {
-    if (settings.locations.size < 2) return
+    if (settings.weatherForecasts.size < 2) return
 
-    val isLocationChanged = selectedLocations.contains(settings.selectedLocation)
-    val newLocations = settings.locations - selectedLocations
+    val isLocationChanged = selectedForecast.contains(settings.selectedWeatherForecast)
+    val newLocations = settings.weatherForecasts - selectedForecast
     val selectedLocation =
-        newLocations.firstOrNull { it != settings.selectedLocation } ?: settings.selectedLocation
+        newLocations.firstOrNull { it != settings.selectedWeatherForecast }
+            ?: settings.selectedWeatherForecast
 
     scope.launch {
         SettingsManager.update(
             context = context,
             settings = settings.copy(
-                locations = newLocations,
-                selectedLocation = selectedLocation
+                weatherForecasts = newLocations,
+                selectedWeatherForecast = selectedLocation
             )
         )
         if (isLocationChanged) onUpdate()
@@ -533,10 +540,10 @@ private fun onDelete(
 @Composable
 private fun DayWeather(state: WeatherScreenState) {
     val scroll = rememberLazyListState()
-    val currentWeather = state.weatherByDay.getOrDefault(state.selectedDay, null)
+    val currentWeather = state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
 
     LaunchedEffect(state.selectedDay) {
-        val hour = LocalTime.now().hour
+        val hour = DateTimeUtil.getLocalDateTime().hour
         scroll.animateScrollToItem(hour)
     }
 
@@ -564,15 +571,14 @@ private fun ForecastDaysList(
         modifier = Modifier.padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        val keys = state.weatherByDay.keys
-        keys.forEachIndexed { index, localDate ->
-            val weatherByDay = state.weatherByDay.getValue(localDate)
+        val countDays = state.forecast?.weatherForecast?.size ?: 0
 
+        state.forecast?.weatherForecast?.forEachIndexed { index, forecast ->
             val maxShapeVal = 16.dp
             val minShapeVal = 8.dp
 
             val shape = when {
-                index == 0 && keys.size == 1 -> RoundedCornerShape(maxShapeVal)
+                index == 0 && countDays == 1 -> RoundedCornerShape(maxShapeVal)
                 index == 0 -> RoundedCornerShape(
                     topStart = maxShapeVal,
                     topEnd = maxShapeVal,
@@ -580,8 +586,8 @@ private fun ForecastDaysList(
                     bottomStart = minShapeVal
                 )
 
-                index > 0 && index < keys.size - 1 -> RoundedCornerShape(minShapeVal)
-                index == keys.size - 1 -> RoundedCornerShape(
+                index > 0 && index < countDays - 1 -> RoundedCornerShape(minShapeVal)
+                index == countDays - 1 -> RoundedCornerShape(
                     bottomStart = maxShapeVal,
                     bottomEnd = maxShapeVal,
                     topStart = minShapeVal,
@@ -594,9 +600,9 @@ private fun ForecastDaysList(
             }
 
             WeatherDayCard(
-                weather = weatherByDay,
+                weather = forecast,
                 shape = shape,
-                isSelected = state.selectedDay == weatherByDay.date,
+                isSelected = state.selectedDay == forecast.date,
                 onClick = onSelectDay
             )
         }

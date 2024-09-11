@@ -62,6 +62,7 @@ import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
 import com.yefim.mobileweatherapp.util.settings.UserLocation
 import com.yefim.openmeteoapi.model.LocationData
 import com.google.android.gms.location.LocationServices
+import com.yefim.mobileweatherapp.util.settings.WeatherForecast
 import kotlinx.coroutines.launch
 
 @Composable
@@ -151,11 +152,13 @@ fun LocationScreen(navController: NavHostController, viewModel: LocationViewMode
                 onClick = {
                     val location = locationState.location ?: return@ExtendedFloatingActionButton
 
+                    val forecast = WeatherForecast(location = location)
+
                     SettingsManager.update(
                         context = context,
                         settings = settings.copy(
-                            locations = settings.locations.plus(location),
-                            selectedLocation = location
+                            weatherForecasts = settings.weatherForecasts.plus(forecast),
+                            selectedWeatherForecast = forecast
                         )
                     )
 
@@ -218,7 +221,7 @@ private fun AddressLocation(
                         if (latitude != null && longitude != null) {
                             LocationCard(
                                 location = UserLocation(
-                                    address =  it.getAddress(),
+                                    address = it.getAddress(),
                                     latitude = latitude,
                                     longitude = longitude
                                 ),

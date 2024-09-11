@@ -1,9 +1,12 @@
 package com.yefim.mobileweatherapp.screen.weather
 
+import android.text.format.DateUtils
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yefim.mobileweatherapp.util.settings.UserLocation
+import com.yefim.mobileweatherapp.util.DateTimeUtil
+import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
+import com.yefim.mobileweatherapp.util.settings.WeatherForecast
 import com.yefim.openmeteoapi.di.OpenMeteoInstance
 import com.yefim.openmeteoapi.model.DayWeatherData
 import com.yefim.openmeteoapi.model.WeatherData
@@ -11,7 +14,7 @@ import com.yefim.openmeteoapi.util.WeatherUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * Enum representing the possible states.
@@ -28,14 +31,12 @@ enum class WeatherResponseState {
  * @property weatherByDay A map of daily weather data grouped by date.
  * @property weatherResponseState The current state of the weather response.
  * @property selectedDay The currently selected day for which weather data is displayed.
- * @property location The current location of the user.
+ * @property forecast The current location of the user.
  */
 data class WeatherScreenState(
-    val weather: WeatherData? = null,
-    val weatherByDay: Map<LocalDate, DayWeatherData> = emptyMap(),
     val weatherResponseState: WeatherResponseState = WeatherResponseState.Done,
-    val selectedDay: LocalDate = LocalDate.now(),
-    val location: UserLocation? = null,
+    val selectedDay: LocalDate = DateTimeUtil.getLocalDateTime().date,
+    val forecast: WeatherForecast? = null,
     val isLoading: Boolean = false,
 )
 
@@ -50,18 +51,21 @@ class WeatherViewModel : ViewModel() {
         _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = true)
 
         viewModelScope.launch {
-            _weatherScreenState.value.location?.let {
+            _weatherScreenState.value.forecast?.let {
                 try {
                     val response = OpenMeteoInstance.getWeatherService().getForecast(
-                        lat = it.latitude,
-                        lon = it.longitude,
+                        lat = it.location.latitude,
+                        lon = it.location.longitude,
                     )
                     val weatherByDay = WeatherUtil.groupWeatherByDay(response)
 
+                    val forecast =
+                        settings.selectedWeatherForecast?.copy(weatherForecast = weatherByDay)
+                            ?: settings.weatherForecasts.first()
+
                     _weatherScreenState.value =
                         _weatherScreenState.value.copy(
-                            weather = response,
-                            weatherByDay = weatherByDay
+                            forecast = forecast
                         )
 
                     updateWeatherResponseState(state = WeatherResponseState.Done)
@@ -82,8 +86,8 @@ class WeatherViewModel : ViewModel() {
         _weatherScreenState.value = _weatherScreenState.value.copy(selectedDay = day)
     }
 
-    fun changeLocation(location: UserLocation) {
-        _weatherScreenState.value = _weatherScreenState.value.copy(location = location)
+    fun changeSelectedForecast(forecast: WeatherForecast) {
+        _weatherScreenState.value = _weatherScreenState.value.copy(forecast = forecast)
         updateWeather()
     }
 }

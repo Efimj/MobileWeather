@@ -1,9 +1,11 @@
 package com.yefim.openmeteoapi.model
 
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class DayWeatherData(
     val date: LocalDate,
     val temperature: List<Double>,
@@ -27,6 +29,6 @@ data class DayWeatherData(
     val windDirectionDominant: Int,
 ) {
     fun checkIsNight(time: LocalTime): Boolean {
-        return (time.isAfter(this.sunrise.toLocalTime()) && time.isBefore(this.sunset.toLocalTime())).not()
+        return (time > this.sunrise.time && time < this.sunset.time).not()
     }
 }

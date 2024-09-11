@@ -2,8 +2,8 @@ package com.yefim.openmeteoapi.util
 
 import com.yefim.openmeteoapi.model.DayWeatherData
 import com.yefim.openmeteoapi.model.WeatherData
-import java.time.LocalDate
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 object WeatherUtil {
     /**
@@ -14,17 +14,17 @@ object WeatherUtil {
      * @return A map of [LocalDate] to [DayWeatherData] where each entry represents
      *         weather information for a specific day.
      */
-    fun groupWeatherByDay(weatherData: WeatherData): Map<LocalDate, DayWeatherData> {
+    fun groupWeatherByDay(weatherData: WeatherData): Set<DayWeatherData> {
         val splitTemperature = weatherData.hourly.temperature.chunked(24)
         val splitRelativeHumidity = weatherData.hourly.relativeHumidity.chunked(24)
         val splitWeatherCode = weatherData.hourly.weatherList().chunked(24)
 
-        val weatherMap = mutableMapOf<LocalDate, DayWeatherData>()
+        val weatherForecast = mutableSetOf<DayWeatherData>()
 
         weatherData.daily.date.forEachIndexed { index, date ->
             val date = LocalDate.parse(date)
 
-            weatherMap[date] = DayWeatherData(
+            weatherForecast.add(DayWeatherData(
                 date = date,
                 temperature = splitTemperature[index],
                 relativeHumidity = splitRelativeHumidity[index],
@@ -45,9 +45,9 @@ object WeatherUtil {
                 windGustsMax = weatherData.daily.windGusts10mMax[index],
                 windDirectionDominant = weatherData.daily.windDirection10mDominant[index],
                 weather = weatherData.daily.weatherList()[index]
-            )
+            ))
         }
 
-        return weatherMap
+        return weatherForecast
     }
 }

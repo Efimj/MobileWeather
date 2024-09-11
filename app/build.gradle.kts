@@ -101,4 +101,6 @@ dependencies {
 
     // Fading edges
     implementation(libs.fadingEdges)
+
+    implementation(libs.kotlinx.datetime)
 }
