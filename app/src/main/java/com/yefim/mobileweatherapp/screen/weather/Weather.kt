@@ -566,8 +566,8 @@ private fun ForecastDaysList(
         keys.forEachIndexed { index, localDate ->
             val weatherByDay = state.weatherByDay.getValue(localDate)
 
-            val maxShapeVal = 12.dp
-            val minShapeVal = 6.dp
+            val maxShapeVal = 16.dp
+            val minShapeVal = 8.dp
 
             val shape = when {
                 index == 0 && keys.size == 1 -> RoundedCornerShape(maxShapeVal)
