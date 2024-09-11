@@ -7,9 +7,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.yefim.mobileweatherapp.navigation.AppNavHost
 import com.yefim.mobileweatherapp.navigation.Screen
@@ -27,8 +30,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
-        actionBar?.hide()
+        installSplashScreen()
         super.onCreate(savedInstanceState)
+        actionBar?.hide()
 
         setContent {
             MobileWeatherAppTheme(
@@ -38,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     else -> isSystemInDarkTheme()
                 },
             ) {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier.fillMaxSize().imePadding()) { innerPadding ->
                     CompositionLocalProvider(LocaleProvider.LocalInsetsPaddings provides innerPadding) {
                         AppNavHost(
                             navController = rememberNavController(),
