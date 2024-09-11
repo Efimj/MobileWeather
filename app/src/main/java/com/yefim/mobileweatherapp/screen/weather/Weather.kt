@@ -2,6 +2,7 @@ package com.yefim.mobileweatherapp.screen.weather
 
 import android.content.Context
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -247,7 +248,7 @@ private fun Humidity(it: DayWeatherData) {
                     modifier = Modifier.width(30.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val barHeight = humidity / 100f
+                    val barHeight by animateFloatAsState(humidity / 100f)
 
                     Spacer(modifier = Modifier.weight(max(1 - barHeight, 0.01f)))
                     Text(
@@ -263,6 +264,7 @@ private fun Humidity(it: DayWeatherData) {
                         MaterialTheme.colorScheme.primary,
                         clampedPercentage
                     )
+
                     Box(
                         modifier = Modifier
                             .padding(vertical = 8.dp)
