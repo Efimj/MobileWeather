@@ -91,6 +91,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
@@ -255,7 +256,7 @@ private fun Humidity(it: DayWeatherData) {
                 ) {
                     val barHeight = humidity / 100f
 
-                    Spacer(modifier = Modifier.weight(1 - barHeight))
+                    Spacer(modifier = Modifier.weight(max(1 - barHeight, 0.01f)))
                     Text(
                         text = "${humidity}%",
                         style = MaterialTheme.typography.bodySmall,
@@ -273,7 +274,7 @@ private fun Humidity(it: DayWeatherData) {
                         modifier = Modifier
                             .padding(vertical = 8.dp)
                             .fillMaxWidth()
-                            .weight(barHeight)
+                            .weight(max(1+barHeight, 0.01f))
                             .clip(MaterialTheme.shapes.medium)
                             .background(backgroundColor)
                     )
