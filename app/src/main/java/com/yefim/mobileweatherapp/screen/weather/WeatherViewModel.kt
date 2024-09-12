@@ -10,7 +10,6 @@ import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
 import com.yefim.mobileweatherapp.util.settings.WeatherForecast
 import com.yefim.openmeteoapi.di.OpenMeteoInstance
 import com.yefim.openmeteoapi.util.WeatherUtil
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
@@ -49,7 +48,6 @@ class WeatherViewModel : ViewModel() {
         _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = true)
 
         viewModelScope.launch {
-            delay(200)
             _weatherScreenState.value.forecast?.let {
                 if (it.checkIsDataRelevant()) {
                     _weatherScreenState.value = _weatherScreenState.value.copy(forecast = it)

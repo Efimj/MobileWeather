@@ -35,6 +35,7 @@ import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -131,6 +132,12 @@ fun WeatherScreen(navController: NavHostController, viewModel: WeatherViewModel 
     )
 }
 
+private enum class ScreenState {
+    Loading,
+    Empty,
+    Forecast
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreenContent(
@@ -142,13 +149,19 @@ fun WeatherScreenContent(
 ) {
     val insets = LocaleProvider.LocalInsetsPaddings.current
 
+    val screenState = when {
+        state.isLoading -> ScreenState.Loading
+        state.forecast?.weatherForecast?.firstOrNull() == null -> ScreenState.Empty
+        else -> ScreenState.Forecast
+    }
+
     PullToRefreshBox(
         isRefreshing = state.isLoading,
         onRefresh = onUpdate
     ) {
-        AnimatedContent(targetState = state.isLoading) { loading ->
-            if (loading) {
-                Stub(
+        AnimatedContent(targetState = screenState) {
+            when (it) {
+                ScreenState.Loading -> Stub(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(insets),
@@ -156,55 +169,74 @@ fun WeatherScreenContent(
                     title = stringResource(R.string.loading),
                     description = stringResource(R.string.it_has_to_happen_quickly),
                 )
-            } else {
-                Column(
+
+                ScreenState.Empty -> Stub(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(insets)
-                        .padding(vertical = 20.dp)
-                ) {
-                    Location(
-                        state = state,
-                        changeForecast = changeLocation,
-                        addLocation = addLocation,
-                        onUpdate = { settings.selectedWeatherForecast?.let { changeLocation(it) } }
-                    )
-                    VerticalSpacer(value = 20.dp)
-                    state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
-                        ?.let { WeatherHeader(weather = it) }
-                    VerticalSpacer(value = 20.dp)
-                    AnimatedContent(state.selectedDay) {
+                        .padding(insets),
+                    icon = Icons.Rounded.Explore,
+                    title = stringResource(R.string.forecast_missing),
+                    description = stringResource(R.string.weather_forecast_is_missing_try_refreshing),
+                )
+
+                ScreenState.Forecast -> {
+                    val forecast =
+                        state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
+                            ?: return@AnimatedContent
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(insets)
+                            .padding(vertical = 20.dp)
+                    ) {
+                        Location(
+                            state = state,
+                            changeForecast = changeLocation,
+                            addLocation = addLocation,
+                            onUpdate = {
+                                settings.selectedWeatherForecast?.let {
+                                    changeLocation(
+                                        it
+                                    )
+                                }
+                            }
+                        )
+                        VerticalSpacer(value = 20.dp)
+                        WeatherHeader(weather = forecast)
+                        VerticalSpacer(value = 20.dp)
+                        AnimatedContent(state.selectedDay) {
+                            Text(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .basicMarquee()
+                                    .padding(horizontal = 20.dp),
+                                text = it.toJavaLocalDate()
+                                    .format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onSurface.copy(.8f)
+                            )
+                        }
+                        VerticalSpacer(value = 10.dp)
+                        DayWeather(state)
+                        VerticalSpacer(value = 20.dp)
                         Text(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .basicMarquee()
                                 .padding(horizontal = 20.dp),
-                            text = it.toJavaLocalDate()
-                                .format(DateTimeFormatter.ofPattern("EEEE, MMM d")),
+                            text = stringResource(R.string.weather_forecast),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface.copy(.8f)
                         )
+                        VerticalSpacer(value = 10.dp)
+                        ForecastDaysList(state, onSelectDay)
+                        VerticalSpacer(value = 20.dp)
+                        Humidity(forecast)
+                        VerticalSpacer(value = 40.dp)
                     }
-                    VerticalSpacer(value = 10.dp)
-                    DayWeather(state)
-                    VerticalSpacer(value = 20.dp)
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        text = stringResource(R.string.weather_forecast),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface.copy(.8f)
-                    )
-                    VerticalSpacer(value = 10.dp)
-                    ForecastDaysList(state, onSelectDay)
-                    VerticalSpacer(value = 20.dp)
-                    state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
-                        ?.let { Humidity(it) }
-                    VerticalSpacer(value = 40.dp)
                 }
             }
         }
@@ -586,13 +618,26 @@ private fun ForecastDaysList(
     state: WeatherScreenState,
     onSelectDay: (LocalDate) -> Unit
 ) {
+    val forecast = state.forecast?.weatherForecast ?: return
+
+    LaunchedEffect(state.forecast) {
+        var isDateValid = false
+
+        forecast.forEach {
+            if (it.date == state.selectedDay) isDateValid = true
+        }
+        if (isDateValid.not()) {
+            onSelectDay(forecast.first().date)
+        }
+    }
+
     Column(
         modifier = Modifier.padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        val countDays = state.forecast?.weatherForecast?.size ?: 0
+        val countDays = forecast.size ?: 0
 
-        state.forecast?.weatherForecast?.forEachIndexed { index, forecast ->
+        forecast.forEachIndexed { index, forecast ->
             val maxShapeVal = 16.dp
             val minShapeVal = 8.dp
 
