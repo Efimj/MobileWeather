@@ -44,7 +44,6 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -96,12 +95,31 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun WeatherScreen(navController: NavHostController, viewModel: WeatherViewModel = viewModel()) {
-    val weatherState by viewModel.weatherScreenState.collectAsState()
+    val context = LocalContext.current
+    val weatherState by viewModel.weatherScreenState
 
     val updateAction: () -> Unit = { viewModel.updateWeather() }
 
     LaunchedEffect(Unit) {
         settings.selectedWeatherForecast?.let { viewModel.changeSelectedForecast(it) }
+    }
+
+    LaunchedEffect(weatherState.forecast) {
+        val currentForecast = weatherState.forecast ?: return@LaunchedEffect
+
+        SettingsManager.update(
+            context = context,
+            settings = settings.copy(
+                selectedWeatherForecast = currentForecast,
+                weatherForecasts = settings.weatherForecasts.map { forecast ->
+                    if (currentForecast.location.latitude == forecast.location.latitude && currentForecast.location.longitude == forecast.location.longitude) {
+                        currentForecast
+                    } else {
+                        forecast
+                    }
+                }.toSet()
+            )
+        )
     }
 
     WeatherScreenContent(
@@ -540,7 +558,8 @@ private fun onDelete(
 @Composable
 private fun DayWeather(state: WeatherScreenState) {
     val scroll = rememberLazyListState()
-    val currentWeather = state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
+    val currentWeather =
+        state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
 
     LaunchedEffect(state.selectedDay) {
         val hour = DateTimeUtil.getLocalDateTime().hour

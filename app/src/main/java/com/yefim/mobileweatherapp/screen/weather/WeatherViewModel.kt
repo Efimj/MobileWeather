@@ -1,18 +1,16 @@
 package com.yefim.mobileweatherapp.screen.weather
 
-import android.text.format.DateUtils
 import android.util.Log
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yefim.mobileweatherapp.util.DateTimeUtil
 import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
 import com.yefim.mobileweatherapp.util.settings.WeatherForecast
 import com.yefim.openmeteoapi.di.OpenMeteoInstance
-import com.yefim.openmeteoapi.model.DayWeatherData
-import com.yefim.openmeteoapi.model.WeatherData
 import com.yefim.openmeteoapi.util.WeatherUtil
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
@@ -36,7 +34,7 @@ enum class WeatherResponseState {
 data class WeatherScreenState(
     val weatherResponseState: WeatherResponseState = WeatherResponseState.Done,
     val selectedDay: LocalDate = DateTimeUtil.getLocalDateTime().date,
-    val forecast: WeatherForecast? = null,
+    val forecast: WeatherForecast? = settings.selectedWeatherForecast,
     val isLoading: Boolean = false,
 )
 
@@ -44,34 +42,42 @@ data class WeatherScreenState(
  * ViewModel for managing the state of the weather screen.
  */
 class WeatherViewModel : ViewModel() {
-    private val _weatherScreenState = MutableStateFlow(WeatherScreenState())
-    val weatherScreenState: StateFlow<WeatherScreenState> = _weatherScreenState
+    private val _weatherScreenState = mutableStateOf(WeatherScreenState())
+    val weatherScreenState: State<WeatherScreenState> = _weatherScreenState
 
     fun updateWeather() {
         _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = true)
 
         viewModelScope.launch {
+            delay(200)
             _weatherScreenState.value.forecast?.let {
-                try {
-                    val response = OpenMeteoInstance.getWeatherService().getForecast(
-                        lat = it.location.latitude,
-                        lon = it.location.longitude,
-                    )
-                    val weatherByDay = WeatherUtil.groupWeatherByDay(response)
-
-                    val forecast =
-                        settings.selectedWeatherForecast?.copy(weatherForecast = weatherByDay)
-                            ?: settings.weatherForecasts.first()
-
-                    _weatherScreenState.value =
-                        _weatherScreenState.value.copy(
-                            forecast = forecast
+                if (it.checkIsDataRelevant()) {
+                    _weatherScreenState.value = _weatherScreenState.value.copy(forecast = it)
+                } else {
+                    try {
+                        val response = OpenMeteoInstance.getWeatherService().getForecast(
+                            lat = it.location.latitude,
+                            lon = it.location.longitude,
                         )
+                        val weatherByDay = WeatherUtil.groupWeatherByDay(response)
 
-                    updateWeatherResponseState(state = WeatherResponseState.Done)
-                } catch (e: Exception) {
-                    Log.e("weather api", "OpenWeatherInstance fetch", e)
-                    updateWeatherResponseState(state = WeatherResponseState.ForecastMissing)
+                        val forecast =
+                            settings.selectedWeatherForecast?.copy(
+                                weatherForecast = weatherByDay,
+                                lastUpdateDate = DateTimeUtil.getLocalDateTime()
+                            )
+                                ?: settings.weatherForecasts.first()
+
+                        _weatherScreenState.value =
+                            _weatherScreenState.value.copy(
+                                forecast = forecast
+                            )
+
+                        updateWeatherResponseState(state = WeatherResponseState.Done)
+                    } catch (e: Exception) {
+                        Log.e("weather api", "OpenWeatherInstance fetch", e)
+                        updateWeatherResponseState(state = WeatherResponseState.ForecastMissing)
+                    }
                 }
             }
             _weatherScreenState.value = _weatherScreenState.value.copy(isLoading = false)
