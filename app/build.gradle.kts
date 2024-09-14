@@ -103,4 +103,10 @@ dependencies {
     implementation(libs.fadingEdges)
 
     implementation(libs.kotlinx.datetime)
+
+    // For AppWidgets support
+    implementation (libs.androidx.glance.appwidget)
+
+    // For interop APIs with Material 3
+    implementation (libs.androidx.glance.material3)
 }
