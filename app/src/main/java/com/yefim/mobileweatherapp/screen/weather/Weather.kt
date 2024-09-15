@@ -180,9 +180,15 @@ fun WeatherScreenContent(
                 )
 
                 ScreenState.Forecast -> {
-                    val forecast =
-                        state.forecast?.weatherForecast?.firstOrNull { it.date == state.selectedDay }
-                            ?: return@AnimatedContent
+                    val forecast by remember {
+                        mutableStateOf(
+                            checkDateValid(
+                                forecast = state.forecast?.weatherForecast!!,
+                                state = state,
+                                onSelectDay = onSelectDay
+                            )
+                        )
+                    }
 
                     Column(
                         modifier = Modifier
@@ -621,14 +627,7 @@ private fun ForecastDaysList(
     val forecast = state.forecast?.weatherForecast ?: return
 
     LaunchedEffect(state.forecast) {
-        var isDateValid = false
-
-        forecast.forEach {
-            if (it.date == state.selectedDay) isDateValid = true
-        }
-        if (isDateValid.not()) {
-            onSelectDay(forecast.first().date)
-        }
+        checkDateValid(forecast = forecast, state = state, onSelectDay = onSelectDay)
     }
 
     Column(
@@ -671,6 +670,15 @@ private fun ForecastDaysList(
             )
         }
     }
+}
+
+private fun checkDateValid(
+    forecast: Set<DayWeatherData>,
+    state: WeatherScreenState,
+    onSelectDay: (LocalDate) -> Unit
+): DayWeatherData {
+    val validDay = forecast.find { it.date == state.selectedDay }
+    return validDay ?: forecast.first().also { onSelectDay(it.date) }
 }
 
 

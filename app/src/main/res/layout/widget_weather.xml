@@ -12,19 +12,16 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
-        android:padding="4dp">
+        android:padding="8dp">
 
-        <!-- Weather Icon -->
         <ImageView
             android:id="@+id/weather_icon"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="8dp"
             android:adjustViewBounds="true"
-            android:background="@drawable/shape"
             android:contentDescription="@null"
-            android:padding="12dp"
             android:scaleType="centerInside" />
 
         <LinearLayout
@@ -32,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingVertical="12dp">
+            android:paddingVertical="4dp">
 
             <!-- Location Text -->
             <TextView

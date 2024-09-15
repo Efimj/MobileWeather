@@ -56,7 +56,7 @@ class WeatherWidget : AppWidgetProvider() {
         views.setImageViewResource(R.id.weather_icon, weatherIcon)
 
         views.setTextViewText(R.id.location_text, forecast.location.address)
-        views.setTextColor(R.id.location_text, theme.onSurface.toArgb())
+        views.setTextColor(R.id.location_text, theme.onSecondaryContainer.toArgb())
 
         val formattedTime =
             currentTime.toJavaLocalDateTime()
@@ -66,7 +66,7 @@ class WeatherWidget : AppWidgetProvider() {
 
         val tempText = "${weather.temperature.getOrElse(currentTime.hour) { 0.0 }.roundToInt()}°"
         views.setTextViewText(R.id.temp_text, tempText)
-        views.setTextColor(R.id.temp_text, theme.onPrimaryContainer.toArgb())
+        views.setTextColor(R.id.temp_text, theme.onSecondaryContainer.toArgb())
 
         views.setInt(R.id.widget_container, "setBackgroundColor", theme.surfaceContainer.toArgb())
 
