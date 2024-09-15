@@ -28,4 +28,7 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="average_humidity">Average humidity</string>
+    <string name="widget_default_location">Texas, Houston</string>
+    <string name="widget_default_date">Sunday, Sep 27</string>
+    <string name="widget_default_temp">27°</string>
 </resources>

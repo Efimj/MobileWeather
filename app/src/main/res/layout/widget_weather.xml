@@ -10,6 +10,7 @@
         android:id="@+id/widget_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/primary"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="8dp">
@@ -22,7 +23,8 @@
             android:layout_marginEnd="8dp"
             android:adjustViewBounds="true"
             android:contentDescription="@null"
-            android:scaleType="centerInside" />
+            android:scaleType="centerInside"
+            android:src="@drawable/mostly_clear_day" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -38,6 +40,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
+                android:text="@string/widget_default_location"
                 android:textColor="@color/onPrimary"
                 android:textFontWeight="500"
                 android:textSize="16sp" />
@@ -50,6 +53,7 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
+                android:text="@string/widget_default_date"
                 android:textColor="@color/onPrimary"
                 android:textSize="14sp"
                 android:textStyle="normal" />
@@ -62,6 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:maxLines="1"
+            android:text="@string/widget_default_temp"
             android:textColor="@color/onPrimary"
             android:textFontWeight="500"
             android:textSize="24sp" />
