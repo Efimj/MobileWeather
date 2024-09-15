@@ -180,7 +180,7 @@ fun WeatherScreenContent(
                 )
 
                 ScreenState.Forecast -> {
-                    val forecast by remember {
+                    val forecast by remember(state.forecast?.weatherForecast, state.selectedDay) {
                         mutableStateOf(
                             checkDateValid(
                                 forecast = state.forecast?.weatherForecast!!,
