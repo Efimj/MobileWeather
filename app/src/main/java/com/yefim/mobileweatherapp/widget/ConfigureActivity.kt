@@ -1,4 +1,4 @@
-package com.yefim.mobileweatherapp
+package com.yefim.mobileweatherapp.widget
 
 import android.content.Context
 import android.os.Bundle
@@ -12,17 +12,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.navigation.compose.rememberNavController
-import com.yefim.mobileweatherapp.navigation.AppNavHost
-import com.yefim.mobileweatherapp.navigation.Screen
 import com.yefim.mobileweatherapp.ui.helper.LocaleProvider
 import com.yefim.mobileweatherapp.ui.theme.MobileWeatherAppTheme
 import com.yefim.mobileweatherapp.util.settings.NightMode
 import com.yefim.mobileweatherapp.util.settings.SettingsManager
 import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
-import com.yefim.mobileweatherapp.widget.WidgetWorkManagerUtil
 
-class MainActivity : ComponentActivity() {
+class ConfigureActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         SettingsManager.init(newBase)
         super.attachBaseContext(newBase)
@@ -33,8 +29,6 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         actionBar?.hide()
         super.onCreate(savedInstanceState)
-        WidgetWorkManagerUtil.scheduleWork(this)
-
 
         setContent {
             MobileWeatherAppTheme(
@@ -50,21 +44,10 @@ class MainActivity : ComponentActivity() {
                         .imePadding()
                 ) { innerPadding ->
                     CompositionLocalProvider(LocaleProvider.LocalInsetsPaddings provides innerPadding) {
-                        AppNavHost(
-                            navController = rememberNavController(),
-                            startDestination = getStartDestination()
-                        )
+
                     }
                 }
             }
-        }
-    }
-
-    fun getStartDestination(): Screen {
-        return if (settings.selectedWeatherForecast == null) {
-            Screen.Location
-        } else {
-            Screen.Weather
         }
     }
 }
