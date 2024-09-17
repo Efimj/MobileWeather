@@ -105,6 +105,4 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     implementation(libs.androidx.work.runtime.ktx)
-
-    implementation(libs.androidx.datastore.preferences)
 }

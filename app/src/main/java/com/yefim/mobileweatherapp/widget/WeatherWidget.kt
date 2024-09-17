@@ -17,10 +17,6 @@ import com.yefim.mobileweatherapp.util.DateTimeUtil
 import com.yefim.mobileweatherapp.util.settings.SettingsManager
 import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
 import com.yefim.mobileweatherapp.util.settings.WeatherForecast
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.datetime.toJavaLocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -41,10 +37,7 @@ class WeatherWidget : AppWidgetProvider() {
                 ACTION_APPWIDGET_DELETED -> {
                     intent.extras?.let {
                         val id = it.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID)
-
-                        CoroutineScope(context = Dispatchers.IO).launch {
-                            WeatherWidgetDataStore.delete(context, id)
-                        }
+                        WeatherWidgetStorage.removeById(context, id)
                     }
                 }
             }
@@ -59,60 +52,54 @@ class WeatherWidget : AppWidgetProvider() {
             SettingsManager.init(context)
             val forecast = settings.weatherForecasts
             val selectedForecast = settings.selectedWeatherForecast
-            CoroutineScope(context = Dispatchers.IO).launch {
-                val savedWidgets = WeatherWidgetDataStore.getWidgets(context).toList()
+            val savedWidgets = WeatherWidgetStorage.getAll(context)
 
-                println("S")
+            val savedWidgetsIds = savedWidgets.map { it.id }
+            val widgetAddedToScreen = appWidgetManager.getAppWidgetIds(
+                ComponentName(
+                    context,
+                    WeatherWidget::class.java
+                )
+            ).toList()
 
-                val savedWidgetsIds = savedWidgets.map { it.id }
-                val createdIds = appWidgetManager.getAppWidgetIds(
-                    ComponentName(
-                        context,
-                        WeatherWidget::class.java
-                    )
-                ).toList()
+            val widgets = savedWidgets.filter { it.id in savedWidgetsIds }.map { it.id }
+            val onlyExisted = widgetAddedToScreen.filterNot { it in savedWidgetsIds }
+            val onlyDeleted = savedWidgetsIds.filterNot { it in widgetAddedToScreen }
 
-                val widgets = savedWidgets.intersect(savedWidgetsIds).toList()
-                val onlyExisted = createdIds.subtract(savedWidgetsIds).toList()
-                val onlyDeleted = savedWidgetsIds.subtract(createdIds).toList()
-
-                // for existed and provided widgets
-                for (widgetId in widgets) {
-                    val widget = savedWidgets.find { it.id == widgetId } ?: continue
-                    val views = updateWeatherWidgetUi(context, forecast, widget)
-                    appWidgetManager.updateAppWidget(widget.id, views)
-                }
-
-                // for not saved in data store
-                for (widgetId in onlyExisted) {
-                    if (selectedForecast == null) continue
-                    val widget = WeatherWidgetDataStore.WeatherWidget(
-                        id = widgetId,
-                        location = selectedForecast.location.address
-                    )
-                    WeatherWidgetDataStore.save(context = context, widget)
-                    val views = updateWeatherWidgetUi(context, forecast, widget)
-                    appWidgetManager.updateAppWidget(widget.id, views)
-                }
-
-                // delete removed widget data
-                for (widgetId in onlyDeleted) {
-                    WeatherWidgetDataStore.delete(context = context, widgetId)
-                }
+            // for existed and provided widgets
+            for (widgetId in widgets) {
+                val widget = savedWidgets.find { it.id == widgetId } ?: continue
+                val views = updateWeatherWidgetUi(context, forecast, widget)
+                appWidgetManager.updateAppWidget(widget.id, views)
             }
+
+            // for not saved in data store
+            for (widgetId in onlyExisted) {
+                if (selectedForecast == null) continue
+                val widget = WeatherWidgetStorage.WeatherWidget(
+                    id = widgetId,
+                    location = selectedForecast.location.address
+                )
+                WeatherWidgetStorage.insert(context = context, listOf(widget))
+                val views = updateWeatherWidgetUi(context, forecast, widget)
+
+                appWidgetManager.updateAppWidget(widget.id, views)
+            }
+
+            WeatherWidgetStorage.removeById(context = context, onlyDeleted)
         }
 
         fun updateWeatherWidgetUi(
             context: Context,
             forecast: Set<WeatherForecast>,
-            widget: WeatherWidgetDataStore.WeatherWidget
+            widget: WeatherWidgetStorage.WeatherWidget
         ): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_weather)
 
             val currentTime = DateTimeUtil.getLocalDateTime()
             val weatherForecast = forecast.first { it.location.address == widget.location }
             val weather =
-                weatherForecast.weatherForecast.find { it.date == currentTime.date } ?: return views
+                weatherForecast.weatherForecast.find { it.date == currentTime.date } ?: weatherForecast.weatherForecast.first()
 
             val theme =
                 getColorScheme(darkTheme = ContextUtil.isDarkTheme(context), context = context)
@@ -158,6 +145,4 @@ class WeatherWidget : AppWidgetProvider() {
         }
     }
 }
-
-
 

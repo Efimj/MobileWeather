@@ -1,5 +1,4 @@
 [versions]
-datastorePreferences = "1.1.1"
 versionName = "1.0.0"
 versionCode = "1"
 
@@ -35,7 +34,6 @@ fadingEdges = "1.0.4"
 workRuntimeKtx = "2.10.0-alpha03"
 
 [libraries]
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 fadingEdges = { module = "com.github.t8rin:ComposeFadingEdges", version.ref = "fadingEdges" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
