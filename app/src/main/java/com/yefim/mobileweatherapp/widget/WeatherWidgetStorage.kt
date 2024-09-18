@@ -33,6 +33,14 @@ object WeatherWidgetStorage {
         updateStorage(context = context, data = newData)
     }
 
+    fun updateOne(context: Context, widget: WeatherWidget) {
+        val storedData = getAll(context)
+        val newData = storedData.map {
+            if (it.id == widget.id) widget else it
+        }
+        updateStorage(context = context, data = newData)
+    }
+
     fun save(context: Context, data: List<WeatherWidget>) {
         updateStorage(context = context, data = data)
     }
