@@ -180,6 +180,8 @@ fun WeatherScreenContent(
                 )
 
                 ScreenState.Forecast -> {
+                    if (state.forecast?.weatherForecast.isNullOrEmpty()) return@AnimatedContent
+
                     val forecast by remember(state.forecast?.weatherForecast, state.selectedDay) {
                         mutableStateOf(
                             checkDateValid(
