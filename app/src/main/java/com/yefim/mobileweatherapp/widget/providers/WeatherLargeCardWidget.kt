@@ -92,6 +92,9 @@ class WeatherLargeCardWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.min_max_temp_text, maxMinTempText)
             views.setTextColor(R.id.temp_text, theme.onSurface.toArgb())
 
+            views.setTextViewText(R.id.location_text, widget.location)
+            views.setTextColor(R.id.location_text, theme.onSurface.toArgb())
+
             views.setInt(
                 R.id.widget_container,
                 "setBackgroundColor",

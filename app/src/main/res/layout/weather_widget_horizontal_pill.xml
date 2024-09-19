@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/shape_pill"
-    android:elevation="4dp"
     android:clipToOutline="true"
+    android:elevation="4dp"
     android:gravity="center">
 
     <LinearLayout
@@ -43,8 +43,8 @@
                 android:maxLines="1"
                 android:text="@string/widget_default_location"
                 android:textColor="@color/onPrimary"
-                android:textFontWeight="500"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <!-- Time Text -->
             <TextView
@@ -67,9 +67,10 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/widget_default_temp"
             android:textColor="@color/onPrimary"
-            android:textFontWeight="500"
-            android:textSize="24sp" />
+            android:textSize="24sp"
+            android:textStyle="bold" />
     </LinearLayout>
 </FrameLayout>
