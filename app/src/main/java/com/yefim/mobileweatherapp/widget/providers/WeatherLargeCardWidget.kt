@@ -80,20 +80,25 @@ class WeatherLargeCardWidget : AppWidgetProvider() {
             views.setImageViewResource(R.id.weather_icon, weatherIcon)
 
             views.setTextViewText(R.id.time_text, formattedTime)
-            views.setTextColor(R.id.time_text, theme.onSurface.toArgb())
+            views.setTextColor(R.id.time_text, theme.onSurface.copy(alpha = .8f).toArgb())
 
             val bigTempText =
                 "${weather.temperature.getOrElse(currentTime.hour) { 0.0 }.roundToInt()}°"
             views.setTextViewText(R.id.big_temp_text, bigTempText)
-            views.setTextColor(R.id.time_text, theme.primary.toArgb())
+            views.setTextColor(R.id.big_temp_text, theme.primary.toArgb())
 
             val maxMinTempText =
                 "${weather.temperatureMax.roundToInt()}° / ${weather.temperatureMin.roundToInt()}°"
             views.setTextViewText(R.id.min_max_temp_text, maxMinTempText)
-            views.setTextColor(R.id.temp_text, theme.onSurface.toArgb())
+            views.setTextColor(R.id.min_max_temp_text, theme.onSurface.copy(alpha = .8f).toArgb())
 
             views.setTextViewText(R.id.location_text, widget.location)
             views.setTextColor(R.id.location_text, theme.onSurface.toArgb())
+
+            val weatherDescription =
+                context.getString(weather.weatherHourly[currentTime.hour].description)
+            views.setTextViewText(R.id.weather_description, weatherDescription)
+            views.setTextColor(R.id.weather_description, theme.onSurface.copy(alpha = .8f).toArgb())
 
             views.setInt(
                 R.id.widget_container,
