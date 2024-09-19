@@ -31,4 +31,7 @@
     <string name="widget_default_location">Texas, Houston</string>
     <string name="widget_default_date">Sunday, Sep 27</string>
     <string name="widget_default_temp">27°</string>
+    <string name="widget_default_time">3:00 PM</string>
+    <string name="widget_default_temp_max_min">31°/13°</string>
+    <string name="widget_default_weather">Overcast</string>
 </resources>

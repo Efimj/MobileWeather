@@ -5,7 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.yefim.mobileweatherapp.widget.WeatherWidget.Companion.updateWeatherWidgets
+import com.yefim.mobileweatherapp.widget.WidgetUtil.updateWeatherWidgets
 
 class WidgetUpdateWorker(appContext: Context, workerParams: WorkerParameters) : Worker(appContext, workerParams) {
     private val LogTag = "WidgetUpdateWorker"

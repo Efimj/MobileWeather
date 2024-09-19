@@ -46,7 +46,9 @@ import com.yefim.mobileweatherapp.ui.theme.MobileWeatherAppTheme
 import com.yefim.mobileweatherapp.util.settings.NightMode
 import com.yefim.mobileweatherapp.util.settings.SettingsManager
 import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
-import com.yefim.mobileweatherapp.widget.WeatherWidget.Companion.updateWeatherWidgets
+import com.yefim.mobileweatherapp.widget.WidgetUtil.updateWeatherWidgets
+import com.yefim.mobileweatherapp.widget.storage.WeatherWidget
+import com.yefim.mobileweatherapp.widget.storage.WeatherWidgetStorage
 
 class ConfigureActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -96,7 +98,7 @@ class ConfigureActivity : ComponentActivity() {
         }
     }
 
-    fun updateWidgetData(widgetData: WeatherWidgetStorage.WeatherWidget) {
+    fun updateWidgetData(widgetData: WeatherWidget) {
         WeatherWidgetStorage.updateOne(context = this, widget = widgetData)
     }
 
@@ -125,14 +127,14 @@ class ConfigureActivity : ComponentActivity() {
         return if (id != AppWidgetManager.INVALID_APPWIDGET_ID) id else null
     }
 
-    fun getWidgetData(widgetId: Int): WeatherWidgetStorage.WeatherWidget? {
+    fun getWidgetData(widgetId: Int): WeatherWidget? {
         return WeatherWidgetStorage.getAll(this).find { it.id == widgetId }
     }
 
     @Composable
     fun ChangeLocation(
         modifier: Modifier = Modifier,
-        widgetData: WeatherWidgetStorage.WeatherWidget,
+        widgetData: WeatherWidget,
         onUpdate: (String) -> Unit
     ) {
         val insets = LocalInsetsPaddings.current

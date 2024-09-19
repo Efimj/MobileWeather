@@ -1,19 +1,12 @@
-package com.yefim.mobileweatherapp.widget
+package com.yefim.mobileweatherapp.widget.storage
 
 import android.content.Context
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 object WeatherWidgetStorage {
     private const val STORE_NAME = "WEATHER_WIDGET_STORAGE"
     private const val WEATHER_WIDGET_DATA = "WEATHER_WIDGET_DATA"
-
-    @Serializable
-    data class WeatherWidget(
-        val id: Int = -1,
-        val location: String = "",
-    )
 
     fun insert(context: Context, data: List<WeatherWidget>) {
         val storedData = getAll(context)
