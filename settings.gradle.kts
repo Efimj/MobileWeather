@@ -22,6 +22,6 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "MobileWeatherApp"
+rootProject.name = "OpenMeteo"
 include(":app")
 include(":feature:openmeteoapi")

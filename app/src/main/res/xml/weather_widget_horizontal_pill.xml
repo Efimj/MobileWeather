@@ -6,7 +6,7 @@
     android:minHeight="32dp"
     android:minResizeWidth="248dp"
     android:minResizeHeight="32dp"
-    android:previewImage="@drawable/rounded_mini_widget_preview"
+    android:previewImage="@drawable/horizontal_pill_widget_preview"
     android:resizeMode="horizontal|vertical"
     android:widgetFeatures="reconfigurable|configuration_optional"
     android:updatePeriodMillis="3600000">

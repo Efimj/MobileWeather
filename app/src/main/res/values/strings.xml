@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MobileWeatherApp</string>
+    <string name="app_name">Open Meteo</string>
     <string name="permissions_required">Permissions required</string>
     <string name="permissions_are_required_for_the_program_to_work">Permissions are required for the program to work</string>
     <string name="location_not_found">Location not found</string>
