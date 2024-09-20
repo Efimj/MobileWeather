@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/shape_pill"
+    android:backgroundTint="@color/primary"
     android:clipToOutline="true"
     android:elevation="4dp"
     android:gravity="center">
@@ -66,8 +67,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:maxLines="1"
             android:ellipsize="end"
+            android:maxLines="1"
             android:text="@string/widget_default_temp"
             android:textColor="@color/onPrimary"
             android:textSize="24sp"

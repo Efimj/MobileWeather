@@ -63,9 +63,6 @@ open class WeatherHorizontalPillWidget : AppWidgetProvider() {
                 weatherForecast.weatherForecast.find { it.date == currentTime.date }
                     ?: weatherForecast.weatherForecast.first()
 
-            val theme =
-                getColorScheme(darkTheme = ContextUtil.isDarkTheme(context), context = context)
-
             val weatherIcon =
                 weather.weatherHourly[currentTime.hour].getWeatherIcon(
                     weather.checkIsNight(
@@ -75,24 +72,15 @@ open class WeatherHorizontalPillWidget : AppWidgetProvider() {
             views.setImageViewResource(R.id.weather_icon, weatherIcon)
 
             views.setTextViewText(R.id.location_text, widget.location)
-            views.setTextColor(R.id.location_text, theme.onSurface.toArgb())
 
             val formattedTime =
                 currentTime.toJavaLocalDateTime()
                     .format(DateTimeFormatter.ofPattern("EEEE, MMM d, h a"))
             views.setTextViewText(R.id.time_text, formattedTime)
-            views.setTextColor(R.id.time_text, theme.onSurface.copy(alpha = .8f).toArgb())
 
             val tempText =
                 "${weather.temperature.getOrElse(currentTime.hour) { 0.0 }.roundToInt()}°"
             views.setTextViewText(R.id.temp_text, tempText)
-            views.setTextColor(R.id.temp_text, theme.primary.toArgb())
-
-            views.setInt(
-                R.id.widget_container,
-                "setBackgroundColor",
-                theme.surfaceContainer.toArgb()
-            )
 
             val intent = Intent(context, MainActivity::class.java)
             intent.putExtra(Intent.EXTRA_UID, widget.id.toString())
