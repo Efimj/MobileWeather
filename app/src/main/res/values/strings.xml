@@ -34,4 +34,8 @@
     <string name="widget_default_time">3:00 PM</string>
     <string name="widget_default_temp_max_min">31°/13°</string>
     <string name="widget_default_weather">Overcast</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="sunset">Sunset</string>
+    <string name="max_uv_index">Max UV index</string>
+    <string name="clear_scy_uv_index">Clear scy UV index</string>
 </resources>

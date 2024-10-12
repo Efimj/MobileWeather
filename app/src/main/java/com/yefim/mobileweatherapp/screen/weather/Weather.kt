@@ -86,6 +86,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
@@ -242,12 +243,78 @@ fun WeatherScreenContent(
                         VerticalSpacer(value = 10.dp)
                         ForecastDaysList(state, onSelectDay)
                         VerticalSpacer(value = 20.dp)
+                        Row(modifier = Modifier.padding(horizontal = 20.dp)) {
+                            WeatherCard(
+                                modifier = Modifier.weight(1f),
+                                firstHeader = stringResource(R.string.sunrise),
+                                firstValue = forecast.sunrise.toJavaLocalDateTime()
+                                    .format(DateTimeFormatter.ofPattern("h:mm a")),
+                                secondHeader = stringResource(R.string.sunset),
+                                secondValue = forecast.sunset.toJavaLocalDateTime()
+                                    .format(DateTimeFormatter.ofPattern("h:mm a"))
+                            )
+                            HorizontalSpacer(value = 10.dp)
+                            WeatherCard(
+                                modifier = Modifier.weight(1f),
+                                firstHeader = stringResource(R.string.max_uv_index),
+                                firstValue = forecast.uvIndexMax.toString(),
+                                secondHeader = stringResource(R.string.clear_scy_uv_index),
+                                secondValue = forecast.uvIndexClearSkyMax.toString()
+                            )
+                        }
+                        VerticalSpacer(value = 10.dp)
                         Humidity(forecast)
                         VerticalSpacer(value = 40.dp)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WeatherCard(
+    modifier: Modifier,
+    firstHeader: String,
+    firstValue: String,
+    secondHeader: String,
+    secondValue: String
+) {
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(20.dp)
+    ) {
+        Text(
+            text = firstHeader,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface.copy(.8f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = firstValue,
+            style = MaterialTheme.typography.headlineMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        VerticalSpacer(value = 10.dp)
+        Text(
+            text = secondHeader,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface.copy(.8f)
+        )
+        Text(
+            text = secondValue,
+            style = MaterialTheme.typography.headlineMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
