@@ -25,3 +25,4 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 rootProject.name = "OpenMeteo"
 include(":app")
 include(":feature:openmeteoapi")
+include(":baselineprofile")
