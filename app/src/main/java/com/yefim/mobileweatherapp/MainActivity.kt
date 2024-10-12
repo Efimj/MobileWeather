@@ -20,6 +20,7 @@ import com.yefim.mobileweatherapp.ui.theme.MobileWeatherAppTheme
 import com.yefim.mobileweatherapp.util.settings.NightMode
 import com.yefim.mobileweatherapp.util.settings.SettingsManager
 import com.yefim.mobileweatherapp.util.settings.SettingsManager.settings
+import com.yefim.mobileweatherapp.util.workers.WeatherForecastWorkManagerUtil
 import com.yefim.mobileweatherapp.widget.WidgetWorkManagerUtil
 
 class MainActivity : ComponentActivity() {
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
         actionBar?.hide()
         super.onCreate(savedInstanceState)
         WidgetWorkManagerUtil.scheduleWork(this)
-
+        WeatherForecastWorkManagerUtil.scheduleWork(this)
 
         setContent {
             MobileWeatherAppTheme(
